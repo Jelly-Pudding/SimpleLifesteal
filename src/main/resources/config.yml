@@ -1,0 +1,8 @@
+# Default number of hearts players start with
+starting-hearts: 15
+
+# Maximum hearts a player can have
+maximum-hearts: 20
+
+# Message used when banning a player for running out of hearts
+ban-message: "You ran out of hearts!" 
