@@ -99,12 +99,14 @@ public class PlayerDataManager {
 
     public void addHearts(UUID uuid, int amount) {
         int currentHearts = getPlayerHearts(uuid);
-        setHeartsInternal(uuid, currentHearts + amount);
+        int newHearts = currentHearts + amount;
+        setPlayerHearts(uuid, newHearts);
     }
 
     public void removeHearts(UUID uuid, int amount) {
         int currentHearts = getPlayerHearts(uuid);
-        setHeartsInternal(uuid, currentHearts - amount);
+        int newHearts = currentHearts - amount;
+        setPlayerHearts(uuid, newHearts);
     }
 
     /**
