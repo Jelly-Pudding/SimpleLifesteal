@@ -16,6 +16,11 @@ commands:
     usage: /isbanned <player>
     permission: simplelifesteal.command.isbanned
     permission-message: You do not have permission to use this command.
+  slunban:
+    description: Removes a player ban from the SimpleLifesteal database.
+    usage: /slunban <player>
+    permission: simplelifesteal.command.slunban
+    permission-message: You do not have permission to use this command.
 permissions:
   simplelifesteal.command.hearts:
     description: Allows using the /hearts command.
@@ -24,3 +29,7 @@ permissions:
   simplelifesteal.command.isbanned:
     description: Allows using the /isbanned command.
     default: true
+
+  simplelifesteal.command.slunban:
+    description: Allows using the /slunban command.
+    default: op
