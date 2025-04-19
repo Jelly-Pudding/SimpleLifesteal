@@ -6,4 +6,4 @@ maximum-hearts: 20
 
 # Message used when banning a player for running out of hearts.
 # Supports standard Minecraft color codes using '&' (e.g. "&c&lOut of hearts!").
-ban-message: "&cYou ran out of hearts!"
+ban-message: "&cYou ran out of hearts!" Visit &bwww.minecraftoffline.net/unban/store&c to get unbanned.
