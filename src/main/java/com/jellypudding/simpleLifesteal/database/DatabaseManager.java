@@ -16,8 +16,9 @@ import java.util.logging.Level;
 public class DatabaseManager {
 
     private final SimpleLifesteal plugin;
-    private Connection connection;
+    private volatile Connection connection;
     private final File dbFile;
+    private final Object connectionLock = new Object();
 
     public DatabaseManager(SimpleLifesteal plugin) {
         this.plugin = plugin;
@@ -25,17 +26,18 @@ public class DatabaseManager {
     }
 
     public Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            connect();
+        synchronized (connectionLock) {
+            if (connection == null || connection.isClosed()) {
+                connect();
+            }
+            return connection;
         }
-        return connection;
     }
 
     private void connect() throws SQLException {
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdirs();
         }
-
         if (!dbFile.exists()) {
             try {
                 dbFile.createNewFile();
@@ -52,68 +54,81 @@ public class DatabaseManager {
             initialiseDatabase();
         } catch (ClassNotFoundException e) {
             plugin.getLogger().log(Level.SEVERE, "SQLite JDBC driver not found!", e);
+            closeConnectionInternal();
             throw new SQLException("SQLite JDBC driver not found", e);
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Could not connect to SQLite database!", e);
+            closeConnectionInternal();
             throw e;
         }
     }
 
     private void initialiseDatabase() throws SQLException {
-        String sql = "CREATE TABLE IF NOT EXISTS player_hearts ("
-                   + " uuid TEXT PRIMARY KEY NOT NULL,"
-                   + " current_hearts INTEGER NOT NULL"
-                   + ");";
-
+        String sql = "CREATE TABLE IF NOT EXISTS player_hearts (" +
+                   " uuid TEXT PRIMARY KEY NOT NULL," +
+                   " current_hearts INTEGER NOT NULL" +
+                   ");";
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sql);
-            plugin.getLogger().info("Player hearts table initialized successfully.");
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not create player_hearts table!", e);
+            plugin.getLogger().log(Level.SEVERE, "Could not initialize player_hearts table!", e);
             throw e;
         }
     }
 
     public void closeConnection() {
+        synchronized (connectionLock) {
+            closeConnectionInternal();
+        }
+    }
+
+    private void closeConnectionInternal() {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                plugin.getLogger().info("Database connection closed.");
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error closing database connection", e);
+        } finally {
+            connection = null;
         }
     }
 
     public int getPlayerHearts(UUID uuid) {
         String sql = "SELECT current_hearts FROM player_hearts WHERE uuid = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, uuid.toString());
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt("current_hearts");
+        synchronized (connectionLock) {
+            Connection conn = null;
+            try {
+                conn = getConnection();
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, uuid.toString());
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            return rs.getInt("current_hearts");
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not retrieve hearts for UUID: " + uuid, e);
             }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not retrieve hearts for UUID: " + uuid, e);
         }
-         // Indicate player not found or error.
         return -1;
     }
 
     public void setPlayerHearts(UUID uuid, int hearts) {
         String sql = "REPLACE INTO player_hearts (uuid, current_hearts) VALUES (?, ?)";
-
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, uuid.toString());
-            pstmt.setInt(2, hearts);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not set hearts for UUID: " + uuid, e);
+        synchronized (connectionLock) {
+            Connection conn = null;
+            try {
+                conn = getConnection();
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, uuid.toString());
+                    pstmt.setInt(2, hearts);
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not set hearts for UUID: " + uuid, e);
+            }
         }
     }
 }
