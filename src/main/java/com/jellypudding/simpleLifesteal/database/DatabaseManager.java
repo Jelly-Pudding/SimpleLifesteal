@@ -183,4 +183,22 @@ public class DatabaseManager {
         return false;
     }
 
+    public boolean removePluginBan(UUID uuid) {
+        String sql = "DELETE FROM plugin_bans WHERE uuid = ?";
+        synchronized (connectionLock) {
+            Connection conn = null;
+            try {
+                conn = getConnection();
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, uuid.toString());
+                    int affectedRows = pstmt.executeUpdate();
+                    return affectedRows > 0;
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not remove plugin ban record for UUID: " + uuid, e);
+            }
+        }
+        return false;
+    }
+
 }

@@ -37,11 +37,14 @@ ban-message: "You ran out of hearts!"
 ## Commands
 
 - `/hearts`: Shows the player their current heart count.
+- `/isbanned <player>`: Checks if a player is banned by SimpleLifesteal.
+- `/slunban <player>`: Removes a player ban from the SimpleLifesteal database.
 
 ## Permissions
 
 - `simplelifesteal.command.hearts`: Allows using the `/hearts` command (Default: `true` - everyone has access).
 - `simplelifesteal.command.isbanned`: Allows using the /isbanned command (Default: `true` - everyone has access).
+- `simplelifesteal.command.slunban`: Allows using the /slunban command (Default: `op` - only OPs have access).
 
 ## Support Me
 Donations will help me with the development of this project.
