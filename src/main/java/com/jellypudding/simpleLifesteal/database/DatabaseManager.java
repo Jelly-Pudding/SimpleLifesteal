@@ -71,7 +71,19 @@ public class DatabaseManager {
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sql);
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not initialize player_hearts table!", e);
+            plugin.getLogger().log(Level.SEVERE, "Could not initialise player_hearts table!", e);
+            throw e;
+        }
+
+        String banSql = "CREATE TABLE IF NOT EXISTS plugin_bans (" +
+                        " uuid TEXT PRIMARY KEY NOT NULL," +
+                        " reason TEXT," +
+                        " ban_timestamp INTEGER NOT NULL" +
+                        ");";
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(banSql);
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Could not initialise plugin_bans table!", e);
             throw e;
         }
     }
@@ -131,4 +143,44 @@ public class DatabaseManager {
             }
         }
     }
+
+    public void addPluginBan(UUID uuid, String reason) {
+        String sql = "REPLACE INTO plugin_bans (uuid, reason, ban_timestamp) VALUES (?, ?, ?)";
+        long timestamp = System.currentTimeMillis(); // Record current time
+
+        synchronized (connectionLock) {
+            Connection conn = null;
+            try {
+                conn = getConnection();
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, uuid.toString());
+                    pstmt.setString(2, reason);
+                    pstmt.setLong(3, timestamp);
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not add plugin ban record for UUID: " + uuid, e);
+            }
+        }
+    }
+
+    public boolean isPlayerBannedByPlugin(UUID uuid) {
+        String sql = "SELECT 1 FROM plugin_bans WHERE uuid = ? LIMIT 1";
+        synchronized (connectionLock) {
+            Connection conn = null;
+            try {
+                conn = getConnection();
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, uuid.toString());
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        return rs.next();
+                    }
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not check plugin ban status for UUID: " + uuid, e);
+            }
+        }
+        return false;
+    }
+
 }

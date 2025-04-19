@@ -1,16 +1,26 @@
 name: SimpleLifesteal
-version: '1.0-SNAPSHOT'
+version: '1.0'
 main: com.jellypudding.simpleLifesteal.SimpleLifesteal
 api-version: '1.21'
 description: "Simple Lifesteal plugin"
 author: AlphaAlex115
+
 commands:
   hearts:
     description: Shows your current heart count.
     usage: /hearts
     permission: simplelifesteal.command.hearts
     permission-message: You do not have permission to use this command.
+  isbanned:
+    description: Checks if a player is banned by SimpleLifesteal.
+    usage: /isbanned <player>
+    permission: simplelifesteal.command.isbanned
+    permission-message: You do not have permission to use this command.
 permissions:
   simplelifesteal.command.hearts:
     description: Allows using the /hearts command.
+    default: true
+
+  simplelifesteal.command.isbanned:
+    description: Allows using the /isbanned command.
     default: true
