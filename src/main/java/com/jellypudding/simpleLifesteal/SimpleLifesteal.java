@@ -1,6 +1,7 @@
 package com.jellypudding.simpleLifesteal;
 
 import com.jellypudding.simpleLifesteal.commands.HeartsCommand;
+import com.jellypudding.simpleLifesteal.commands.IsBannedCommand;
 import com.jellypudding.simpleLifesteal.database.DatabaseManager;
 import com.jellypudding.simpleLifesteal.listeners.PlayerListener;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
@@ -42,6 +43,7 @@ public final class SimpleLifesteal extends JavaPlugin {
 
         // Register Commands.
         getCommand("hearts").setExecutor(new HeartsCommand(this));
+        getCommand("isbanned").setExecutor(new IsBannedCommand(this));
 
         // Register Event Listeners.
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);

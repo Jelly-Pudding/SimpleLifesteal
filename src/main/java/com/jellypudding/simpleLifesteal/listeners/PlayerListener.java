@@ -155,9 +155,11 @@ public class PlayerListener implements Listener {
         String rawBanMessage = plugin.getBanMessage();
         Component componentMessage = LegacyComponentSerializer.legacyAmpersand().deserialize(rawBanMessage);
         String finalBanMessage = LegacyComponentSerializer.legacySection().serialize(componentMessage);
+        String banSource = plugin.getName();
 
         Bukkit.getScheduler().runTask(plugin, () -> {
-            player.ban(finalBanMessage, (Date) null, "SimpleLifesteal", true);
+            player.ban(finalBanMessage, (Date) null, banSource, true);
+            plugin.getDatabaseManager().addPluginBan(playerUUID, finalBanMessage);
             plugin.getLogger().info("Banned player " + playerName + " (" + playerUUID + ") for running out of hearts.");
         });
     }
@@ -168,9 +170,11 @@ public class PlayerListener implements Listener {
         String rawBanMessage = plugin.getBanMessage();
         Component componentMessage = LegacyComponentSerializer.legacyAmpersand().deserialize(rawBanMessage);
         String finalBanMessage = LegacyComponentSerializer.legacySection().serialize(componentMessage);
+        String banSource = plugin.getName();
 
         Bukkit.getScheduler().runTask(plugin, () -> {
-            player.ban(finalBanMessage, (Date) null, "SimpleLifesteal");
+            player.ban(finalBanMessage, (Date) null, banSource);
+            plugin.getDatabaseManager().addPluginBan(playerUUID, finalBanMessage);
             plugin.getLogger().info("Banned offline player " + playerName + " (" + playerUUID + ") for running out of hearts.");
         });
     }
