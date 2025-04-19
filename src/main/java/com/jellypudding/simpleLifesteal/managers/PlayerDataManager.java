@@ -75,15 +75,30 @@ public class PlayerDataManager {
     }
 
     public void saveAllPlayerData() {
-        plugin.getLogger().info("Saving all player heart data...");
+        plugin.getLogger().info("Saving all player heart data synchronously...");
         for (UUID uuid : heartCache.keySet()) {
-            savePlayerData(uuid, false);
+            if (heartCache.containsKey(uuid)) {
+                 int hearts = heartCache.get(uuid);
+                 databaseManager.setPlayerHearts(uuid, hearts);
+             } else {
+                 // Should never happen.
+                 plugin.getLogger().warning("Attempted to save data for UUID " + uuid + " which was not in cache during shutdown.");
+             }
         }
-        plugin.getLogger().info("Finished saving player heart data.");
+        plugin.getLogger().info("Finished saving player heart data synchronously.");
     }
 
     public int getPlayerHearts(UUID uuid) {
         return heartCache.getOrDefault(uuid, startingHearts);
+    }
+
+    public int getPlayerHeartsNow(UUID uuid) {
+        if (heartCache.containsKey(uuid)) {
+            return heartCache.get(uuid);
+        } else {
+            int dbHearts = databaseManager.getPlayerHearts(uuid);
+            return (dbHearts == -1) ? startingHearts : dbHearts;
+        }
     }
 
     private void setHeartsInternal(UUID uuid, int hearts) {
@@ -98,13 +113,13 @@ public class PlayerDataManager {
     }
 
     public void addHearts(UUID uuid, int amount) {
-        int currentHearts = getPlayerHearts(uuid);
+        int currentHearts = getPlayerHeartsNow(uuid);
         int newHearts = currentHearts + amount;
         setPlayerHearts(uuid, newHearts);
     }
 
     public void removeHearts(UUID uuid, int amount) {
-        int currentHearts = getPlayerHearts(uuid);
+        int currentHearts = getPlayerHeartsNow(uuid);
         int newHearts = currentHearts - amount;
         setPlayerHearts(uuid, newHearts);
     }
