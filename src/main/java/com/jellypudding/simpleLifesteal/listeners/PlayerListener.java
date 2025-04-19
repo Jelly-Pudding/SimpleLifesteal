@@ -17,6 +17,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Projectile;
 
 import java.util.Date;
 import java.util.List;
@@ -118,15 +120,26 @@ public class PlayerListener implements Listener {
                 plugin.getLogger().info("Combat logger " + loggerName + " already had 0 or fewer hearts (" + originalLoggerHearts + "). No action taken.");
             }
 
-            if (event.getDamager() instanceof Player killer) {
-                 if (!killer.getUniqueId().equals(combatLoggerUuid)) {
-                     playerDataManager.addHearts(killer.getUniqueId(), 1);
-                     int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
-                     killer.sendMessage(Component.text("You killed " + loggerName + "'s combat log NPC and stole a heart! You now have " 
-                             + killerNewHearts + (killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN));
-                 } else {
-                      plugin.getLogger().info("Killer was the same as the combat logger. No heart added.");
-                 }
+            Player killer = null;
+            Entity damager = event.getDamager();
+
+            if (damager instanceof Player) {
+                killer = (Player) damager;
+            } else if (damager instanceof Projectile projectile) {
+                if (projectile.getShooter() instanceof Player shooter) {
+                    killer = shooter;
+                }
+            }
+
+            if (killer != null) {
+                if (!killer.getUniqueId().equals(combatLoggerUuid)) {
+                    playerDataManager.addHearts(killer.getUniqueId(), 1);
+                    int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
+                    killer.sendMessage(Component.text("You killed " + loggerName + "'s combat log NPC and stole a heart! You now have "
+                            + killerNewHearts + (killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN));
+                } else {
+                     plugin.getLogger().info("[DEBUG] Killer was the same as the combat logger. No heart added.");
+                }
             }
 
         } catch (IllegalArgumentException e) {
