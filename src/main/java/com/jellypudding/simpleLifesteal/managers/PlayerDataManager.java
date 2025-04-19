@@ -89,10 +89,6 @@ public class PlayerDataManager {
     }
 
     public int getPlayerHearts(UUID uuid) {
-        return heartCache.getOrDefault(uuid, startingHearts);
-    }
-
-    public int getPlayerHeartsNow(UUID uuid) {
         if (heartCache.containsKey(uuid)) {
             return heartCache.get(uuid);
         } else {
@@ -113,13 +109,13 @@ public class PlayerDataManager {
     }
 
     public void addHearts(UUID uuid, int amount) {
-        int currentHearts = getPlayerHeartsNow(uuid);
+        int currentHearts = getPlayerHearts(uuid);
         int newHearts = currentHearts + amount;
         setPlayerHearts(uuid, newHearts);
     }
 
     public void removeHearts(UUID uuid, int amount) {
-        int currentHearts = getPlayerHeartsNow(uuid);
+        int currentHearts = getPlayerHearts(uuid);
         int newHearts = currentHearts - amount;
         setPlayerHearts(uuid, newHearts);
     }
