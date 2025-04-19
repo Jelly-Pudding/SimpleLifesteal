@@ -29,7 +29,8 @@ starting-hearts: 15
 # Maximum hearts a player can have
 maximum-hearts: 20
 
-# Message used when banning a player for running out of hearts
+# Message used when banning a player for running out of hearts.
+# Supports standard Minecraft color codes using '&' (e.g. "&c&lOut of hearts!").
 ban-message: "You ran out of hearts!"
 ```
 

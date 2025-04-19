@@ -16,6 +16,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.util.Date;
 import java.util.List;
@@ -69,10 +70,9 @@ public class PlayerListener implements Listener {
             victim.sendMessage(Component.text("You lost a heart! You now have " + newHearts + (newHearts == 1 ? " heart." : " hearts."), NamedTextColor.RED));
         } else {
             victim.sendMessage(Component.text("You lost your final heart!", NamedTextColor.RED));
-            banPlayer(victim); // Use single ban method
+            banPlayer(victim);
         }
 
-        // Killer gains a heart
         if (killer != null && !killer.equals(victim)) {
             playerDataManager.addHearts(killer.getUniqueId(), 1);
             int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
@@ -97,7 +97,7 @@ public class PlayerListener implements Listener {
             OfflinePlayer combatLogger = Bukkit.getOfflinePlayer(combatLoggerUuid);
             String loggerName = combatLogger.getName() != null ? combatLogger.getName() : combatLoggerUuid.toString();
 
-            int originalLoggerHearts = playerDataManager.getPlayerHeartsNow(combatLoggerUuid);
+            int originalLoggerHearts = playerDataManager.getPlayerHearts(combatLoggerUuid);
             if (originalLoggerHearts == -1) {
                 plugin.getLogger().warning("Combat logger " + loggerName + " (UUID: " + combatLoggerUuid + ") not found in database during NPC kill processing.");
                 return; 
@@ -113,6 +113,9 @@ public class PlayerListener implements Listener {
                         banOfflinePlayer(combatLogger);
                     }
                 }
+            } else {
+                // Should never happen.
+                plugin.getLogger().info("Combat logger " + loggerName + " already had 0 or fewer hearts (" + originalLoggerHearts + "). No action taken.");
             }
 
             if (event.getDamager() instanceof Player killer) {
@@ -136,7 +139,9 @@ public class PlayerListener implements Listener {
     private void banPlayer(Player player) {
         String playerName = player.getName();
         UUID playerUUID = player.getUniqueId();
-        String finalBanMessage = plugin.getBanMessage();
+        String rawBanMessage = plugin.getBanMessage();
+        Component componentMessage = LegacyComponentSerializer.legacyAmpersand().deserialize(rawBanMessage);
+        String finalBanMessage = LegacyComponentSerializer.legacySection().serialize(componentMessage);
 
         Bukkit.getScheduler().runTask(plugin, () -> {
             player.ban(finalBanMessage, (Date) null, "SimpleLifesteal", true);
@@ -147,10 +152,12 @@ public class PlayerListener implements Listener {
     private void banOfflinePlayer(OfflinePlayer player) {
         UUID playerUUID = player.getUniqueId();
         String playerName = player.getName() != null ? player.getName() : playerUUID.toString();
-        String finalBanMessage = plugin.getBanMessage();
+        String rawBanMessage = plugin.getBanMessage();
+        Component componentMessage = LegacyComponentSerializer.legacyAmpersand().deserialize(rawBanMessage);
+        String finalBanMessage = LegacyComponentSerializer.legacySection().serialize(componentMessage);
 
         Bukkit.getScheduler().runTask(plugin, () -> {
-            player.ban(finalBanMessage, (Date) null, "SimpleLifesteal"); // Ban
+            player.ban(finalBanMessage, (Date) null, "SimpleLifesteal");
             plugin.getLogger().info("Banned offline player " + playerName + " (" + playerUUID + ") for running out of hearts.");
         });
     }
