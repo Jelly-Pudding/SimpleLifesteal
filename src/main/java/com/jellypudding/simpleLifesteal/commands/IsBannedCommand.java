@@ -2,6 +2,7 @@ package com.jellypudding.simpleLifesteal.commands;
 
 import com.jellypudding.simpleLifesteal.SimpleLifesteal;
 import com.jellypudding.simpleLifesteal.database.DatabaseManager;
+import com.jellypudding.simpleLifesteal.utils.BanCheckResult;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -39,12 +40,13 @@ public class IsBannedCommand implements CommandExecutor {
         this.databaseManager = plugin.getDatabaseManager();
     }
 
-    private void checkBedrockPlayerBanAsync(CommandSender sender, String playerName) {
+    private void checkBedrockPlayerBanAsync(String playerName) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             UUID uuid = null;
             String errorMessage = null;
             int responseCode = -1;
             String responseBodyForDebug = "<No response body received>";
+            String finalStatus;
 
             try {
                 String encodedPlayerName = URLEncoder.encode(playerName, StandardCharsets.UTF_8);
@@ -86,41 +88,46 @@ public class IsBannedCommand implements CommandExecutor {
                          errorMessage = "Could not parse UUID from API response.";
                          plugin.getLogger().warning("Could not find UUID pattern in API response. Response: " + responseBodyForDebug);
                     }
+                     if (uuid == null) {
+                         finalStatus = "ERROR"; 
+                     } else {
+                        finalStatus = null;
+                     }
                 } else if (responseCode == 204 || responseCode == 302) {
                      errorMessage = "Player not found or is Java account.";
+                     finalStatus = "NOT_FOUND";
                  } else {
                     errorMessage = "Geyser API request failed with status code: " + responseCode;
+                    finalStatus = "ERROR";
                  }
                 responseBodyForDebug = response.body();
             } catch (Exception e) {
                 plugin.getLogger().log(Level.WARNING, "Error checking Bedrock player ban via API for " + playerName, e);
                 errorMessage = "An error occurred while contacting the API.";
+                finalStatus = "ERROR";
             }
 
             final UUID finalUuid = uuid;
             final String finalErrorMessage = errorMessage;
-            final String finalResponseBody = responseBodyForDebug;
+            final String determinedStatus = finalStatus;
 
             Bukkit.getScheduler().runTask(plugin, () -> {
-                if (finalUuid != null) {
-                    boolean bannedByPluginDB = databaseManager.isPlayerBannedByPlugin(finalUuid);
-                    if (bannedByPluginDB) {
-                        sender.sendMessage(Component.text(playerName, NamedTextColor.YELLOW)
-                           .append(Component.text(" is banned.", NamedTextColor.RED)));
-                   } else {
-                        sender.sendMessage(Component.text(playerName, NamedTextColor.YELLOW)
-                           .append(Component.text(" is not banned.", NamedTextColor.GREEN)));
-                   }
-                } else {
-                    String logMsg = "Could not determine ban status for '" + playerName + "'.";
-                    if (finalErrorMessage != null) {
-                        logMsg += " Reason: " + finalErrorMessage;
-                    } else {
-                        logMsg += " Reason: Unknown (check API response).";
+                String resultToStore;
+                if (determinedStatus != null) {
+                    resultToStore = determinedStatus;
+                    if ("ERROR".equals(resultToStore)) {
+                        String logMsg = "Could not determine ban status for '" + playerName + "' via API.";
+                        if (finalErrorMessage != null) logMsg += " Reason: " + finalErrorMessage;
+                        plugin.getLogger().log(Level.WARNING, logMsg);
                     }
-                    plugin.getLogger().log(Level.WARNING, logMsg + " API Response Body: " + finalResponseBody);
-                    sender.sendMessage(Component.text("Could not determine ban status for '" + playerName + ".", NamedTextColor.RED));
+                } else if (finalUuid != null) {
+                    boolean bannedByPluginDB = databaseManager.isPlayerBannedByPlugin(finalUuid);
+                    resultToStore = bannedByPluginDB ? "BANNED" : "NOT_BANNED";
+                } else {
+                    plugin.getLogger().warning("Unexpected state in checkBedrockPlayerBanAsync callback for " + playerName);
+                    resultToStore = "ERROR";
                 }
+                plugin.getPendingBanResults().put(playerName, new BanCheckResult(resultToStore));
             });
         });
     }
@@ -135,7 +142,8 @@ public class IsBannedCommand implements CommandExecutor {
         String playerName = args[0];
 
         if (playerName.startsWith(bedrockPrefix)) {
-            checkBedrockPlayerBanAsync(sender, playerName);
+            sender.sendMessage(Component.text("CHECK_PENDING " + playerName));
+            checkBedrockPlayerBanAsync(playerName);
             return true;
         }
 

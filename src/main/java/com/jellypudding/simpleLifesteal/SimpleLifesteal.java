@@ -3,13 +3,17 @@ package com.jellypudding.simpleLifesteal;
 import com.jellypudding.simpleLifesteal.commands.HeartsCommand;
 import com.jellypudding.simpleLifesteal.commands.IsBannedCommand;
 import com.jellypudding.simpleLifesteal.commands.SlUnbanCommand;
+import com.jellypudding.simpleLifesteal.commands.CheckBanResultCommand;
 import com.jellypudding.simpleLifesteal.database.DatabaseManager;
 import com.jellypudding.simpleLifesteal.listeners.PlayerListener;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import com.jellypudding.simpleLifesteal.utils.BanCheckResult;
 
 import java.sql.SQLException;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 public final class SimpleLifesteal extends JavaPlugin {
 
@@ -18,6 +22,8 @@ public final class SimpleLifesteal extends JavaPlugin {
     private String banMessage;
     private DatabaseManager databaseManager;
     private PlayerDataManager playerDataManager;
+    // Map to store results of async ban checks (PlayerName -> BanCheckResult).
+    private final Map<String, BanCheckResult> pendingBanResults = new ConcurrentHashMap<>();
 
     @Override
     public void onEnable() {
@@ -46,6 +52,7 @@ public final class SimpleLifesteal extends JavaPlugin {
         getCommand("hearts").setExecutor(new HeartsCommand(this));
         getCommand("isbanned").setExecutor(new IsBannedCommand(this));
         getCommand("slunban").setExecutor(new SlUnbanCommand(this));
+        getCommand("checkbanresult").setExecutor(new CheckBanResultCommand(this));
 
         // Register Event Listeners.
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -75,6 +82,10 @@ public final class SimpleLifesteal extends JavaPlugin {
 
     public String getBanMessage() {
         return banMessage;
+    }
+
+    public Map<String, BanCheckResult> getPendingBanResults() {
+        return pendingBanResults;
     }
 
     // --- Manager Getters ---

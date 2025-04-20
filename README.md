@@ -39,12 +39,14 @@ ban-message: "You ran out of hearts!"
 - `/hearts`: Shows the player their current heart count.
 - `/isbanned <player>`: Checks if a player is banned by SimpleLifesteal.
 - `/slunban <player>`: Removes a player ban from the SimpleLifesteal database.
+- `/checkbanresult <player>`: (Admin/RCON) Checks the result of a pending Bedrock player ban check initiated by /isbanned.
 
 ## Permissions
 
 - `simplelifesteal.command.hearts`: Allows using the `/hearts` command (Default: `true` - everyone has access).
 - `simplelifesteal.command.isbanned`: Allows using the /isbanned command (Default: `true` - everyone has access).
 - `simplelifesteal.command.slunban`: Allows using the /slunban command (Default: `op` - only OPs have access).
+- `simplelifesteal.command.checkbanresult`: Allows using the /checkbanresult command (Default: `op` - only OPs have access).
 
 ## Support Me
 Donations will help me with the development of this project.
