@@ -21,6 +21,11 @@ commands:
     usage: /slunban <player>
     permission: simplelifesteal.command.slunban
     permission-message: You do not have permission to use this command.
+  checkbanresult:
+    description: Checks the result of a pending Bedrock player ban check.
+    usage: /checkbanresult <player>
+    permission: simplelifesteal.command.checkbanresult
+    permission-message: You do not have permission to use this command.
 permissions:
   simplelifesteal.command.hearts:
     description: Allows using the /hearts command.
@@ -32,4 +37,8 @@ permissions:
 
   simplelifesteal.command.slunban:
     description: Allows using the /slunban command.
+    default: op
+
+  simplelifesteal.command.checkbanresult:
+    description: Allows using the /checkbanresult command.
     default: op
