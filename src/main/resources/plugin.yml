@@ -33,7 +33,7 @@ permissions:
 
   simplelifesteal.command.isbanned:
     description: Allows using the /isbanned command.
-    default: true
+    default: op
 
   simplelifesteal.command.slunban:
     description: Allows using the /slunban command.

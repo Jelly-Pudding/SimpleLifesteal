@@ -44,7 +44,7 @@ ban-message: "You ran out of hearts!"
 ## Permissions
 
 - `simplelifesteal.command.hearts`: Allows using the `/hearts` command (Default: `true` - everyone has access).
-- `simplelifesteal.command.isbanned`: Allows using the /isbanned command (Default: `true` - everyone has access).
+- `simplelifesteal.command.isbanned`: Allows using the /isbanned command (Default: `op` - only OPs have access).
 - `simplelifesteal.command.slunban`: Allows using the /slunban command (Default: `op` - only OPs have access).
 - `simplelifesteal.command.checkbanresult`: Allows using the /checkbanresult command (Default: `op` - only OPs have access).
 
