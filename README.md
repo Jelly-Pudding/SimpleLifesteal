@@ -24,7 +24,7 @@ The configuration file `plugins/SimpleLifesteal/config.yml` allows you to custom
 
 ```yaml
 # Default number of hearts players start with
-starting-hearts: 15
+starting-hearts: 10
 
 # Maximum hearts a player can have
 maximum-hearts: 20

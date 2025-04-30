@@ -3,6 +3,7 @@ package com.jellypudding.simpleLifesteal.managers;
 import com.jellypudding.simpleLifesteal.SimpleLifesteal;
 import com.jellypudding.simpleLifesteal.database.DatabaseManager;
 import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -50,7 +51,12 @@ public class PlayerDataManager {
             // Update cache and execute callback synchronously.
             Bukkit.getScheduler().runTask(plugin, () -> {
                 heartCache.put(uuid, finalHearts);
-                // Execute the callback with the loaded heart count.
+
+                if (player != null && player.isOnline()) {
+                    updatePlayerMaxHealth(player, finalHearts);
+                }
+
+                // Execute the original callback if provided.
                 if (callback != null) {
                     callback.accept(finalHearts);
                 }
@@ -101,6 +107,25 @@ public class PlayerDataManager {
         // Clamp hearts (0 to maxHearts).
         hearts = Math.max(minHearts, Math.min(hearts, maxHearts));
         heartCache.put(uuid, hearts);
+
+        // Update player's actual max health if they are online
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null && player.isOnline()) {
+            updatePlayerMaxHealth(player, hearts);
+        }
+    }
+
+    private void updatePlayerMaxHealth(Player player, int hearts) {
+        // Ensure hearts is at least 1 (representing half a heart in game)
+        double newMaxHealth = Math.max(1.0, hearts * 2.0); 
+        try {
+            player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(newMaxHealth);
+            if (player.getHealth() > newMaxHealth) {
+                player.setHealth(newMaxHealth);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to update max health for " + player.getName() + ": " + e.getMessage());
+        }
     }
 
     public void setPlayerHearts(UUID uuid, int hearts) {
