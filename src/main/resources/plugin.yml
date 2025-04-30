@@ -1,5 +1,5 @@
 name: SimpleLifesteal
-version: '1.1'
+version: '1.2'
 main: com.jellypudding.simpleLifesteal.SimpleLifesteal
 api-version: '1.21'
 description: "Simple Lifesteal plugin"

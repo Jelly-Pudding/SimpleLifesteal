@@ -4,6 +4,8 @@ import com.jellypudding.simpleLifesteal.SimpleLifesteal;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -16,7 +18,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Projectile;
 
@@ -36,14 +37,13 @@ public class PlayerListener implements Listener {
         this.playerDataManager = plugin.getPlayerDataManager();
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.LOW)
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         UUID playerUuid = player.getUniqueId();
 
         playerDataManager.loadPlayerData(player, loadedHearts -> {
             if (!player.isOnline()) return;
-            // They will have 0 hearts if they have been unbanned. Set them to the starting hearts.
             if (loadedHearts <= 0) {
                 int startingHearts = plugin.getStartingHearts();
                 plugin.getLogger().info(player.getName() + " joined with 0 hearts. Resetting to " + startingHearts + ".");
@@ -161,6 +161,15 @@ public class PlayerListener implements Listener {
             player.ban(finalBanMessage, (Date) null, banSource, true);
             plugin.getDatabaseManager().addPluginBan(playerUUID, finalBanMessage);
             plugin.getLogger().info("Banned player " + playerName + " (" + playerUUID + ") for running out of hearts.");
+
+            int banCount = plugin.getDatabaseManager().getTotalHeartBans();
+            Component broadcastMessage = Component.text(playerName, NamedTextColor.YELLOW)
+                    .append(Component.text(" has run out of hearts and was banned! ", NamedTextColor.GRAY))
+                    .append(Component.text("(", NamedTextColor.DARK_GRAY))
+                    .append(Component.text("Total bans: ", NamedTextColor.GRAY))
+                    .append(Component.text(banCount, NamedTextColor.RED, TextDecoration.BOLD))
+                    .append(Component.text(")", NamedTextColor.DARK_GRAY));
+            Bukkit.broadcast(broadcastMessage);
         });
     }
 
@@ -176,6 +185,15 @@ public class PlayerListener implements Listener {
             player.ban(finalBanMessage, (Date) null, banSource);
             plugin.getDatabaseManager().addPluginBan(playerUUID, finalBanMessage);
             plugin.getLogger().info("Banned offline player " + playerName + " (" + playerUUID + ") for running out of hearts.");
+
+            int banCount = plugin.getDatabaseManager().getTotalHeartBans();
+            Component broadcastMessage = Component.text(playerName, NamedTextColor.YELLOW)
+                    .append(Component.text(" has run out of hearts and was banned (whilst offline)! ", NamedTextColor.GRAY))
+                    .append(Component.text("(", NamedTextColor.DARK_GRAY))
+                    .append(Component.text("Total bans: ", NamedTextColor.GRAY))
+                    .append(Component.text(banCount, NamedTextColor.RED, TextDecoration.BOLD))
+                    .append(Component.text(")", NamedTextColor.DARK_GRAY));
+            Bukkit.broadcast(broadcastMessage);
         });
     }
 }

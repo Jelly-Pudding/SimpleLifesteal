@@ -29,7 +29,7 @@ public final class SimpleLifesteal extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         reloadConfig();
-        startingHearts = getConfig().getInt("starting-hearts", 15);
+        startingHearts = getConfig().getInt("starting-hearts", 10);
         maxHearts = getConfig().getInt("maximum-hearts", 20);
         banMessage = getConfig().getString("ban-message", "You ran out of hearts!");
 

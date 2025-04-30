@@ -201,4 +201,24 @@ public class DatabaseManager {
         return false;
     }
 
+    public int getTotalHeartBans() {
+        String sql = "SELECT COUNT(*) AS ban_count FROM plugin_bans";
+        int banCount = 0;
+        synchronized (connectionLock) {
+            Connection conn = null;
+            try {
+                conn = getConnection();
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery(sql)) {
+                    if (rs.next()) {
+                        banCount = rs.getInt("ban_count");
+                    }
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not retrieve total heart bans count from database!", e);
+            }
+        }
+        return banCount;
+    }
+
 }
