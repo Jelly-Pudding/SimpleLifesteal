@@ -20,6 +20,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -159,6 +160,52 @@ public class PlayerListener implements Listener {
             plugin.getLogger().log(Level.SEVERE, "Error parsing BattleLock NPC metadata UUID from damage event: " + playerUuidString, e);
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred processing BattleLock NPC death from damage event: " + playerUuidString, e);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onNpcDeath(EntityDeathEvent event) {
+        if (!(event.getEntity() instanceof Villager npc)) {
+            return;
+        }
+
+        List<MetadataValue> metadata = npc.getMetadata(battleLockMetaKey);
+        if (metadata.isEmpty()) {
+            return;
+        }
+
+        String playerUuidString = metadata.get(0).asString();
+        try {
+            UUID combatLoggerUuid = UUID.fromString(playerUuidString);
+            OfflinePlayer combatLogger = Bukkit.getOfflinePlayer(combatLoggerUuid);
+            String loggerName = combatLogger.getName() != null ? combatLogger.getName() : combatLoggerUuid.toString();
+
+            int originalLoggerHearts = playerDataManager.getPlayerHearts(combatLoggerUuid);
+            if (originalLoggerHearts == -1) {
+                plugin.getLogger().warning("Combat logger " + loggerName + " (UUID: " + combatLoggerUuid + ") not found in database during NPC death processing.");
+                return; 
+            }
+
+            if (originalLoggerHearts > 0) {
+                int newLoggerHearts = Math.max(0, originalLoggerHearts - 1);
+                playerDataManager.removeHearts(combatLoggerUuid, 1);
+
+                plugin.getLogger().info("Combat logger " + loggerName + " lost a heart due to environmental NPC death. Hearts: " + originalLoggerHearts + " -> " + newLoggerHearts);
+
+                if (newLoggerHearts <= 0) {
+                    if (combatLogger != null) {
+                        plugin.getLogger().info("Combat logger " + loggerName + " reached 0 hearts from environmental death. Banning...");
+                        banOfflinePlayer(combatLogger);
+                    }
+                }
+            } else {
+                plugin.getLogger().warning("Combat logger " + loggerName + " already had 0 or fewer hearts (" + originalLoggerHearts + "). No action taken.");
+            }
+
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error parsing BattleLock NPC metadata UUID from death event: " + playerUuidString, e);
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred processing BattleLock NPC death from death event: " + playerUuidString, e);
         }
     }
 
