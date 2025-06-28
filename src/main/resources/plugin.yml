@@ -1,9 +1,10 @@
 name: SimpleLifesteal
-version: '1.2'
+version: '1.3'
 main: com.jellypudding.simpleLifesteal.SimpleLifesteal
 api-version: '1.21'
 description: "Simple Lifesteal plugin"
 author: AlphaAlex115
+website: www.minecraftoffline.net
 
 commands:
   hearts:
@@ -11,24 +12,38 @@ commands:
     usage: /hearts
     permission: simplelifesteal.command.hearts
     permission-message: You do not have permission to use this command.
+
+  withdrawheart:
+    description: Withdraw hearts as edible items.
+    usage: /withdrawheart [amount]
+    permission: simplelifesteal.command.withdrawheart
+    permission-message: You do not have permission to use this command.
+
   isbanned:
     description: Checks if a player is banned by SimpleLifesteal.
     usage: /isbanned <player>
     permission: simplelifesteal.command.isbanned
     permission-message: You do not have permission to use this command.
+
   slunban:
     description: Removes a player ban from the SimpleLifesteal database.
     usage: /slunban <player>
     permission: simplelifesteal.command.slunban
     permission-message: You do not have permission to use this command.
+
   checkbanresult:
     description: Checks the result of a pending Bedrock player ban check.
     usage: /checkbanresult <player>
     permission: simplelifesteal.command.checkbanresult
     permission-message: You do not have permission to use this command.
+
 permissions:
   simplelifesteal.command.hearts:
     description: Allows using the /hearts command.
+    default: true
+
+  simplelifesteal.command.withdrawheart:
+    description: Allows using the /withdrawheart command.
     default: true
 
   simplelifesteal.command.isbanned:

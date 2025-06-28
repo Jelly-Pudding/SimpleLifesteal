@@ -4,6 +4,7 @@ import com.jellypudding.simpleLifesteal.commands.HeartsCommand;
 import com.jellypudding.simpleLifesteal.commands.IsBannedCommand;
 import com.jellypudding.simpleLifesteal.commands.SlUnbanCommand;
 import com.jellypudding.simpleLifesteal.commands.CheckBanResultCommand;
+import com.jellypudding.simpleLifesteal.commands.HeartWithdrawCommand;
 import com.jellypudding.simpleLifesteal.database.DatabaseManager;
 import com.jellypudding.simpleLifesteal.listeners.PlayerListener;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
@@ -50,6 +51,7 @@ public final class SimpleLifesteal extends JavaPlugin {
 
         // Register Commands.
         getCommand("hearts").setExecutor(new HeartsCommand(this));
+        getCommand("withdrawheart").setExecutor(new HeartWithdrawCommand(this));
         getCommand("isbanned").setExecutor(new IsBannedCommand(this));
         getCommand("slunban").setExecutor(new SlUnbanCommand(this));
         getCommand("checkbanresult").setExecutor(new CheckBanResultCommand(this));
