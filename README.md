@@ -1,6 +1,6 @@
 # SimpleLifesteal Plugin
 
-**SimpleLifesteal** is a Minecraft 1.21.6 Paper plugin that provides a simple lifesteal mechanic where players gain hearts for killing others and lose hearts upon death. When they run out of hearts, they get banned.
+**SimpleLifesteal** is a Minecraft 1.21.7 Paper plugin that provides a simple lifesteal mechanic where players gain hearts for killing others and lose hearts upon death. When they run out of hearts, they get banned.
 
 ## Features
 
