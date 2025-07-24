@@ -113,9 +113,73 @@ public final class SimpleLifesteal extends JavaPlugin {
     public boolean addHearts(UUID playerUuid, int amount) {
         if (playerDataManager == null) {
             getLogger().severe("Attempted to call addHearts API before PlayerDataManager was initialised!");
-            return false; // Indicate failure
+            return false;
         }
-        // Delegate to the method in PlayerDataManager
         return playerDataManager.givePlayerHearts(playerUuid, amount);
+    }
+
+    /**
+     * Public API method to get a player's current heart count.
+     *
+     * @param playerUuid The UUID of the player.
+     * @return The player's current heart count, or starting hearts if player not found.
+     */
+    public int getPlayerHearts(UUID playerUuid) {
+        if (playerDataManager == null) {
+            getLogger().severe("Attempted to call getPlayerHearts API before PlayerDataManager was initialised!");
+            return getStartingHearts();
+        }
+        return playerDataManager.getPlayerHearts(playerUuid);
+    }
+
+    /**
+     * Public API method to get a player's maximum heart limit.
+     * Returns the individual player's limit if set, otherwise the global maximum.
+     *
+     * @param playerUuid The UUID of the player.
+     * @return The player's maximum heart limit.
+     */
+    public int getPlayerMaxHearts(UUID playerUuid) {
+        if (playerDataManager == null) {
+            getLogger().severe("Attempted to call getPlayerMaxHearts API before PlayerDataManager was initialised!");
+            return getMaxHearts();
+        }
+        return playerDataManager.getPlayerMaxHearts(playerUuid);
+    }
+
+    /**
+     * Public API method to set a player's maximum heart limit.
+     * This allows the player to exceed the global maximum-hearts configuration.
+     *
+     * @param playerUuid The UUID of the player.
+     * @param maxHearts The new maximum heart limit (must be at least 1).
+     * @return true if the limit was successfully set, false otherwise.
+     */
+    public boolean setPlayerMaxHearts(UUID playerUuid, int maxHearts) {
+        if (playerDataManager == null) {
+            getLogger().severe("Attempted to call setPlayerMaxHearts API before PlayerDataManager was initialised!");
+            return false;
+        }
+        if (maxHearts < 1) {
+            return false;
+        }
+        playerDataManager.setPlayerMaxHearts(playerUuid, maxHearts);
+        return true;
+    }
+
+    /**
+     * Public API method to increase a player's maximum heart limit.
+     * This allows the player to exceed the global maximum-hearts configuration.
+     *
+     * @param playerUuid The UUID of the player.
+     * @param amount The amount to increase the limit by (must be positive).
+     * @return true if the limit was successfully increased, false otherwise.
+     */
+    public boolean increasePlayerMaxHearts(UUID playerUuid, int amount) {
+        if (playerDataManager == null) {
+            getLogger().severe("Attempted to call increasePlayerMaxHearts API before PlayerDataManager was initialised!");
+            return false;
+        }
+        return playerDataManager.increasePlayerMaxHearts(playerUuid, amount);
     }
 }

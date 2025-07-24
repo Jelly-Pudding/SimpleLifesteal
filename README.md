@@ -35,6 +35,40 @@ maximum-hearts: 20
 ban-message: "You ran out of hearts!"
 ```
 
+## Updating to v1.6
+
+**If you're upgrading to v1.6 from a previous version**, you need to manually add a new column to your database to support individual player heart limits.
+
+### Manual Database Update Steps:
+
+1. **Stop your server** to ensure the database isn't being used.
+
+2. **Navigate to your plugin directory:**
+   ```bash
+   cd plugins/SimpleLifesteal/
+   ```
+
+3. **Open the database with SQLite:**
+   ```bash
+   sqlite3 player_hearts.db
+   ```
+
+4. **Add the new column:**
+   ```sql
+   ALTER TABLE player_hearts ADD COLUMN max_hearts INTEGER;
+   ```
+
+5. **Verify the column was added:**
+   ```sql
+   .schema player_hearts
+   ```
+   You should see: `max_hearts INTEGER` in the output.
+
+6. **Exit SQLite:**
+   ```sql
+   .quit
+   ```
+
 ## Commands
 
 - `/hearts`: Shows the player their current heart count.
@@ -50,6 +84,51 @@ ban-message: "You ran out of hearts!"
 - `simplelifesteal.command.isbanned`: Allows using the /isbanned command (Default: `op` - only OPs have access).
 - `simplelifesteal.command.slunban`: Allows using the /slunban command (Default: `op` - only OPs have access).
 - `simplelifesteal.command.checkbanresult`: Allows using the /checkbanresult command (Default: `op` - only OPs have access).
+
+## API for Developers
+
+### Setup Dependencies
+1. Download the latest `SimpleLifesteal.jar` and place it in a `libs` directory - and then add this to your `build.gradle` file:
+    ```gradle
+    dependencies {
+        compileOnly files('libs/SimpleLifesteal-1.6.0.jar')
+    }
+    ```
+
+2. If SimpleLifesteal is absolutely required by your plugin, then add this to your `plugin.yml` file - and this means if SimpleLifesteal is not found then your plugin will not load:
+    ```yaml
+    depend: [SimpleLifesteal]
+    ```
+
+### Getting SimpleLifesteal Instance
+You can import SimpleLifesteal into your project through using the below code:
+```java
+import org.bukkit.Bukkit;
+import com.jellypudding.simpleLifesteal.SimpleLifesteal;
+
+Plugin simpleLifestealPlugin = Bukkit.getPluginManager().getPlugin("SimpleLifesteal");
+if (simpleLifestealPlugin instanceof SimpleLifesteal && simpleLifestealPlugin.isEnabled()) {
+    SimpleLifesteal simpleLifesteal = (SimpleLifesteal) simpleLifestealPlugin;
+}
+```
+
+### Available API Methods
+```java
+// Get player's current heart count
+int currentHearts = simpleLifesteal.getPlayerHearts(playerUUID);
+
+// Add hearts to a player (returns success boolean)
+boolean success = simpleLifesteal.addHearts(playerUUID, 5);
+
+// Get player's current maximum heart limit
+int maxHearts = simpleLifesteal.getPlayerMaxHearts(playerUUID);
+
+// Set player's maximum heart limit (allows exceeding global maximum)
+boolean success = simpleLifesteal.setPlayerMaxHearts(playerUUID, 25);
+
+// Increase player's maximum heart limit by specified amount
+boolean success = simpleLifesteal.increasePlayerMaxHearts(playerUUID, 3);
+```
 
 ## Support Me
 Donations will help me with the development of this project.

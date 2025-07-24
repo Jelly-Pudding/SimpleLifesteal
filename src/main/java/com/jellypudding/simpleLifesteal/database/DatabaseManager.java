@@ -66,7 +66,8 @@ public class DatabaseManager {
     private void initialiseDatabase() throws SQLException {
         String sql = "CREATE TABLE IF NOT EXISTS player_hearts (" +
                    " uuid TEXT PRIMARY KEY NOT NULL," +
-                   " current_hearts INTEGER NOT NULL" +
+                   " current_hearts INTEGER NOT NULL," +
+                   " max_hearts INTEGER" +
                    ");";
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sql);
@@ -140,6 +141,51 @@ public class DatabaseManager {
                 }
             } catch (SQLException e) {
                 plugin.getLogger().log(Level.SEVERE, "Could not set hearts for UUID: " + uuid, e);
+            }
+        }
+    }
+
+    public Integer getPlayerMaxHearts(UUID uuid) {
+        String sql = "SELECT max_hearts FROM player_hearts WHERE uuid = ?";
+        synchronized (connectionLock) {
+            Connection conn = null;
+            try {
+                conn = getConnection();
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, uuid.toString());
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            int maxHearts = rs.getInt("max_hearts");
+                            return rs.wasNull() ? null : maxHearts;
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not retrieve max hearts for UUID: " + uuid, e);
+            }
+        }
+        return null;
+    }
+
+    public void setPlayerMaxHearts(UUID uuid, int maxHearts) {
+        String sql = "REPLACE INTO player_hearts (uuid, current_hearts, max_hearts) VALUES (?, ?, ?)";
+        int currentHearts = getPlayerHearts(uuid);
+        if (currentHearts == -1) {
+            currentHearts = plugin.getStartingHearts();
+        }
+        
+        synchronized (connectionLock) {
+            Connection conn = null;
+            try {
+                conn = getConnection();
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, uuid.toString());
+                    pstmt.setInt(2, currentHearts);
+                    pstmt.setInt(3, maxHearts);
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not set max hearts for UUID: " + uuid, e);
             }
         }
     }

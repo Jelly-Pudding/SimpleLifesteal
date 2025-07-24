@@ -103,9 +103,45 @@ public class PlayerDataManager {
         }
     }
 
+    public int getPlayerMaxHearts(UUID uuid) {
+        Integer individualMax = databaseManager.getPlayerMaxHearts(uuid);
+        return (individualMax != null) ? individualMax : maxHearts;
+    }
+
+    public void setPlayerMaxHearts(UUID uuid, int newMaxHearts) {
+        if (newMaxHearts < 1) {
+            plugin.getLogger().warning("Attempted to set max hearts to " + newMaxHearts + " for UUID " + uuid + " (minimum is 1)");
+            return;
+        }
+
+        databaseManager.setPlayerMaxHearts(uuid, newMaxHearts);
+
+        int currentHearts = getPlayerHearts(uuid);
+        if (currentHearts > newMaxHearts) {
+            setPlayerHearts(uuid, newMaxHearts);
+        }
+
+        plugin.getLogger().info("Set max hearts to " + newMaxHearts + " for UUID " + uuid);
+    }
+
+    public boolean increasePlayerMaxHearts(UUID uuid, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+
+        int currentMax = getPlayerMaxHearts(uuid);
+        int newMax = currentMax + amount;
+        setPlayerMaxHearts(uuid, newMax);
+
+        plugin.getLogger().info("Increased max hearts by " + amount + " for UUID " + uuid + " (new max: " + newMax + ")");
+        return true;
+    }
+
     private void setHeartsInternal(UUID uuid, int hearts) {
-        // Clamp hearts (0 to maxHearts).
-        hearts = Math.max(minHearts, Math.min(hearts, maxHearts));
+        // Get individual player's max hearts instead of global max
+        int playerMaxHearts = getPlayerMaxHearts(uuid);
+        // Clamp hearts (0 to playerMaxHearts).
+        hearts = Math.max(minHearts, Math.min(hearts, playerMaxHearts));
         heartCache.put(uuid, hearts);
 
         // Update player's actual max health if they are online
@@ -158,16 +194,16 @@ public class PlayerDataManager {
         }
 
         int currentHearts = getPlayerHearts(playerUuid);
-        int maxHearts = plugin.getMaxHearts();
+        int playerMaxHearts = getPlayerMaxHearts(playerUuid);
 
-        if (currentHearts >= maxHearts) {
+        if (currentHearts >= playerMaxHearts) {
             return false;
         }
 
         int newHearts = currentHearts + amount;
 
-        if (newHearts > maxHearts) {
-            newHearts = maxHearts;
+        if (newHearts > playerMaxHearts) {
+            newHearts = playerMaxHearts;
         }
 
         setPlayerHearts(playerUuid, newHearts);
@@ -175,4 +211,4 @@ public class PlayerDataManager {
         return true;
     }
 
-} 
+}
