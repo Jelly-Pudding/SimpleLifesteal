@@ -129,7 +129,7 @@ public class DatabaseManager {
     }
 
     public void setPlayerHearts(UUID uuid, int hearts) {
-        String sql = "REPLACE INTO player_hearts (uuid, current_hearts) VALUES (?, ?)";
+        String sql = "INSERT OR REPLACE INTO player_hearts (uuid, current_hearts, max_hearts) VALUES (?, ?, COALESCE((SELECT max_hearts FROM player_hearts WHERE uuid = ?), NULL))";
         synchronized (connectionLock) {
             Connection conn = null;
             try {
@@ -137,6 +137,7 @@ public class DatabaseManager {
                 try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                     pstmt.setString(1, uuid.toString());
                     pstmt.setInt(2, hearts);
+                    pstmt.setString(3, uuid.toString());
                     pstmt.executeUpdate();
                 }
             } catch (SQLException e) {

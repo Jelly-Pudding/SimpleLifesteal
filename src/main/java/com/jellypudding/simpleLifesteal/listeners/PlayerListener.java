@@ -241,7 +241,7 @@ public class PlayerListener implements Listener {
 
             // Check if player is already at max hearts
             int currentHearts = playerDataManager.getPlayerHearts(player.getUniqueId());
-            int maxHearts = plugin.getMaxHearts();
+            int maxHearts = plugin.getPlayerMaxHearts(player.getUniqueId());
             
             if (currentHearts >= maxHearts) {
                 player.sendMessage(Component.text("You are already at maximum hearts (", NamedTextColor.RED)
