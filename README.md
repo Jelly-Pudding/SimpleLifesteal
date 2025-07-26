@@ -62,7 +62,7 @@ ban-message: "You ran out of hearts!"
    ```sql
    .schema player_hearts
    ```
-   You should see: `max_hearts INTEGER` in the output.
+   You should see: `CREATE TABLE player_hearts (uuid TEXT PRIMARY KEY NOT NULL, current_hearts INTEGER NOT NULL, max_hearts INTEGER)`
 
 6. **Exit SQLite:**
    ```sql
