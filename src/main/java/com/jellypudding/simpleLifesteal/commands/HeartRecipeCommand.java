@@ -40,7 +40,7 @@ public class HeartRecipeCommand implements CommandExecutor {
 
             for (int row = 0; row < 3; row++) {
                 List<String> rowItems = recipeConfig.get(row);
-                Component rowComponent = Component.text("  ");
+                Component rowComponent = Component.text("");
 
                 for (int col = 0; col < 3; col++) {
                     String materialName = rowItems.get(col);
