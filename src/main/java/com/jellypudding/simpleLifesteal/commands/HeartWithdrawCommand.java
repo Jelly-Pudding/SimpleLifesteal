@@ -2,31 +2,25 @@ package com.jellypudding.simpleLifesteal.commands;
 
 import com.jellypudding.simpleLifesteal.SimpleLifesteal;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
+import com.jellypudding.simpleLifesteal.utils.HeartItemUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
-
-import java.util.List;
 
 public class HeartWithdrawCommand implements CommandExecutor {
 
     private final SimpleLifesteal plugin;
     private final PlayerDataManager playerDataManager;
-    private final NamespacedKey heartKey;
+    private final HeartItemUtil heartItemUtil;
 
     public HeartWithdrawCommand(SimpleLifesteal plugin) {
         this.plugin = plugin;
         this.playerDataManager = plugin.getPlayerDataManager();
-        this.heartKey = new NamespacedKey(plugin, "lifesteal_heart");
+        this.heartItemUtil = plugin.getHeartItemUtil();
     }
 
     @Override
@@ -71,8 +65,8 @@ public class HeartWithdrawCommand implements CommandExecutor {
         // Remove hearts from player
         playerDataManager.removeHearts(player.getUniqueId(), heartsToWithdraw);
         
-        // Create heart item
-        ItemStack heartItem = createHeartItem(heartsToWithdraw);
+        // Create heart item using the utility
+        ItemStack heartItem = heartItemUtil.createHeartItem(heartsToWithdraw);
         player.getInventory().addItem(heartItem);
 
         // Send success message
@@ -84,28 +78,5 @@ public class HeartWithdrawCommand implements CommandExecutor {
                 .append(Component.text(" heart" + (newHeartCount == 1 ? "" : "s") + " remaining.", NamedTextColor.GREEN)));
 
         return true;
-    }
-
-    private ItemStack createHeartItem(int heartCount) {
-        ItemStack item = new ItemStack(Material.APPLE, heartCount);
-        ItemMeta meta = item.getItemMeta();
-        
-        meta.displayName(Component.text("Heart", NamedTextColor.RED, TextDecoration.BOLD)
-                .decoration(TextDecoration.ITALIC, false));
-        
-        meta.lore(List.of(
-                Component.text("Consume to regain a heart.", NamedTextColor.GREEN)
-                        .decoration(TextDecoration.ITALIC, false)
-        ));
-        
-        // Add persistent data to identify this as a lifesteal heart.
-        meta.getPersistentDataContainer().set(heartKey, PersistentDataType.BOOLEAN, true);
-        
-        item.setItemMeta(meta);
-        return item;
-    }
-
-    public NamespacedKey getHeartKey() {
-        return heartKey;
     }
 }

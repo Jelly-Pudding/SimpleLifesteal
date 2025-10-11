@@ -1,11 +1,12 @@
 # SimpleLifesteal Plugin
 
-**SimpleLifesteal** is a Minecraft 1.21.8 Paper plugin that provides a simple lifesteal mechanic where players gain hearts for killing others and lose hearts upon death. When they run out of hearts, they get banned.
+**SimpleLifesteal** is a Minecraft 1.21.10 Paper plugin that provides a simple lifesteal mechanic where players gain hearts for killing others and lose hearts upon death. When they run out of hearts, they get banned.
 
 ## Features
 
 - **Simple Lifesteal**: Gain a heart for killing a player, lose a heart on death.
 - **Heart Withdrawal**: Players can withdraw their hearts as consumable apple items using `/withdrawheart`.
+- **Heart Crafting**: Players can craft hearts using expensive materials (fully configurable recipe).
 - **Configurable Limits**: Set the starting and maximum number of hearts players can have.
 - **Player Ban**: Players who lose their final heart (reach 0) are automatically banned.
 - **Unban Reset**: Players who are externally unbanned and rejoin with 0 hearts automatically have their hearts reset to the starting amount.
@@ -33,7 +34,17 @@ maximum-hearts: 20
 # Message used when banning a player for running out of hearts.
 # Supports standard Minecraft color codes using '&' (e.g. "&c&lOut of hearts!").
 ban-message: "You ran out of hearts!"
+
+# Heart Crafting Settings
+heart-crafting:
+  enabled: true
+  recipe:
+    - ['NETHERITE_INGOT', 'NETHER_STAR', 'NETHERITE_INGOT']
+    - ['DIAMOND_BLOCK', 'DIAMOND_BLOCK', 'DIAMOND_BLOCK']
+    - ['NETHERITE_INGOT', 'NETHER_STAR', 'NETHERITE_INGOT']
 ```
+
+> **Note:** Recipe uses Material names from [Paper's Material enum](https://jd.papermc.io/paper/1.21.10/org/bukkit/Material.html).
 
 ## Updating to v1.6
 
@@ -73,6 +84,7 @@ ban-message: "You ran out of hearts!"
 
 - `/hearts`: Shows the player their current heart count.
 - `/withdrawheart [amount]`: Withdraw hearts as consumable apple items. Defaults to 1 heart if no amount specified.
+- `/heartrecipe`: Displays the heart crafting recipe in chat.
 - `/isbanned <player>`: Checks if a player is banned by SimpleLifesteal.
 - `/slunban <player>`: Removes a player ban from the SimpleLifesteal database.
 - `/checkbanresult <player>`: (Admin/RCON) Checks the result of a pending Bedrock player ban check initiated by /isbanned.
@@ -81,6 +93,7 @@ ban-message: "You ran out of hearts!"
 
 - `simplelifesteal.command.hearts`: Allows using the `/hearts` command (Default: `true` - everyone has access).
 - `simplelifesteal.command.withdrawheart`: Allows using the `/withdrawheart` command (Default: `true` - everyone has access).
+- `simplelifesteal.command.heartrecipe`: Allows using the `/heartrecipe` command (Default: `true` - everyone has access).
 - `simplelifesteal.command.isbanned`: Allows using the /isbanned command (Default: `op` - only OPs have access).
 - `simplelifesteal.command.slunban`: Allows using the /slunban command (Default: `op` - only OPs have access).
 - `simplelifesteal.command.checkbanresult`: Allows using the /checkbanresult command (Default: `op` - only OPs have access).
@@ -91,7 +104,7 @@ ban-message: "You ran out of hearts!"
 1. Download the latest `SimpleLifesteal.jar` and place it in a `libs` directory - and then add this to your `build.gradle` file:
     ```gradle
     dependencies {
-        compileOnly files('libs/SimpleLifesteal-1.6.0.jar')
+        compileOnly files('libs/SimpleLifesteal-1.7.0.jar')
     }
     ```
 

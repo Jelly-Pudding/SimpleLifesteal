@@ -2,6 +2,7 @@ package com.jellypudding.simpleLifesteal.listeners;
 
 import com.jellypudding.simpleLifesteal.SimpleLifesteal;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
+import com.jellypudding.simpleLifesteal.utils.HeartItemUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -28,9 +29,6 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.block.Action;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.NamespacedKey;
 
 import java.util.Date;
 import java.util.List;
@@ -41,11 +39,13 @@ public class PlayerListener implements Listener {
 
     private final SimpleLifesteal plugin;
     private final PlayerDataManager playerDataManager;
+    private final HeartItemUtil heartItemUtil;
     private final String battleLockMetaKey = "BattleLock_CombatLog";
 
     public PlayerListener(SimpleLifesteal plugin) {
         this.plugin = plugin;
         this.playerDataManager = plugin.getPlayerDataManager();
+        this.heartItemUtil = plugin.getHeartItemUtil();
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -232,10 +232,7 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        ItemMeta meta = item.getItemMeta();
-        NamespacedKey heartKey = new NamespacedKey(plugin, "lifesteal_heart");
-
-        if (meta.getPersistentDataContainer().has(heartKey, PersistentDataType.BOOLEAN)) {
+        if (heartItemUtil.isHeartItem(item)) {
             // Cancel the event to prevent normal item interaction
             event.setCancelled(true);
 
@@ -278,11 +275,8 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        ItemMeta meta = item.getItemMeta();
-        NamespacedKey heartKey = new NamespacedKey(plugin, "lifesteal_heart");
-
         // Prevent normal consumption of heart apples - they should only be consumed via right-click.
-        if (meta.getPersistentDataContainer().has(heartKey, PersistentDataType.BOOLEAN)) {
+        if (heartItemUtil.isHeartItem(item)) {
             event.setCancelled(true);
         }
     }

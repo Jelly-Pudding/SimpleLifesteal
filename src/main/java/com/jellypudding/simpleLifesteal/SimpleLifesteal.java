@@ -5,9 +5,12 @@ import com.jellypudding.simpleLifesteal.commands.IsBannedCommand;
 import com.jellypudding.simpleLifesteal.commands.SlUnbanCommand;
 import com.jellypudding.simpleLifesteal.commands.CheckBanResultCommand;
 import com.jellypudding.simpleLifesteal.commands.HeartWithdrawCommand;
+import com.jellypudding.simpleLifesteal.commands.HeartRecipeCommand;
 import com.jellypudding.simpleLifesteal.database.DatabaseManager;
 import com.jellypudding.simpleLifesteal.listeners.PlayerListener;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
+import com.jellypudding.simpleLifesteal.managers.CraftingManager;
+import com.jellypudding.simpleLifesteal.utils.HeartItemUtil;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.jellypudding.simpleLifesteal.utils.BanCheckResult;
 
@@ -23,6 +26,8 @@ public final class SimpleLifesteal extends JavaPlugin {
     private String banMessage;
     private DatabaseManager databaseManager;
     private PlayerDataManager playerDataManager;
+    private HeartItemUtil heartItemUtil;
+    private CraftingManager craftingManager;
     // Map to store results of async ban checks (PlayerName -> BanCheckResult).
     private final Map<String, BanCheckResult> pendingBanResults = new ConcurrentHashMap<>();
 
@@ -49,15 +54,27 @@ public final class SimpleLifesteal extends JavaPlugin {
         // Initialise player data manager.
         playerDataManager = new PlayerDataManager(this);
 
+        // Initialise heart item utility.
+        heartItemUtil = new HeartItemUtil(this);
+
+        // Initialise crafting manager and register recipes.
+        craftingManager = new CraftingManager(this, heartItemUtil);
+        craftingManager.registerHeartRecipe();
+
         // Register Commands.
         getCommand("hearts").setExecutor(new HeartsCommand(this));
         getCommand("withdrawheart").setExecutor(new HeartWithdrawCommand(this));
+        getCommand("heartrecipe").setExecutor(new HeartRecipeCommand(this));
         getCommand("isbanned").setExecutor(new IsBannedCommand(this));
         getCommand("slunban").setExecutor(new SlUnbanCommand(this));
         getCommand("checkbanresult").setExecutor(new CheckBanResultCommand(this));
 
         // Register Event Listeners.
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+
+        // Initialise bStats
+        int pluginId = 27543;
+        new Metrics(this, pluginId);
 
         getLogger().info("SimpleLifesteal fully enabled.");
     }
@@ -66,6 +83,10 @@ public final class SimpleLifesteal extends JavaPlugin {
     public void onDisable() {
         if (playerDataManager != null) {
             playerDataManager.saveAllPlayerData();
+        }
+
+        if (craftingManager != null) {
+            craftingManager.unregisterHeartRecipe();
         }
 
         getLogger().info("SimpleLifesteal disabled.");
@@ -97,6 +118,10 @@ public final class SimpleLifesteal extends JavaPlugin {
 
     public PlayerDataManager getPlayerDataManager() {
         return playerDataManager;
+    }
+
+    public HeartItemUtil getHeartItemUtil() {
+        return heartItemUtil;
     }
 
     // --- Public API Methods ---

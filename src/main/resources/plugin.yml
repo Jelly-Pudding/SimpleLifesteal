@@ -1,5 +1,5 @@
 name: SimpleLifesteal
-version: '1.6'
+version: '1.7'
 main: com.jellypudding.simpleLifesteal.SimpleLifesteal
 api-version: '1.21'
 description: "Simple Lifesteal plugin"
@@ -17,6 +17,12 @@ commands:
     description: Withdraw hearts as edible items.
     usage: /withdrawheart [amount]
     permission: simplelifesteal.command.withdrawheart
+    permission-message: You do not have permission to use this command.
+
+  heartrecipe:
+    description: Shows the heart crafting recipe.
+    usage: /heartrecipe
+    permission: simplelifesteal.command.heartrecipe
     permission-message: You do not have permission to use this command.
 
   isbanned:
@@ -44,6 +50,10 @@ permissions:
 
   simplelifesteal.command.withdrawheart:
     description: Allows using the /withdrawheart command.
+    default: true
+
+  simplelifesteal.command.heartrecipe:
+    description: Allows using the /heartrecipe command.
     default: true
 
   simplelifesteal.command.isbanned:
