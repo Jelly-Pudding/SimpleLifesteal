@@ -8,30 +8,30 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.metadata.MetadataValue;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Projectile;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
-import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -40,12 +40,13 @@ public class PlayerListener implements Listener {
     private final SimpleLifesteal plugin;
     private final PlayerDataManager playerDataManager;
     private final HeartItemUtil heartItemUtil;
-    private final String battleLockMetaKey = "BattleLock_CombatLog";
+    private final NamespacedKey battleLockKey;
 
     public PlayerListener(SimpleLifesteal plugin) {
         this.plugin = plugin;
         this.playerDataManager = plugin.getPlayerDataManager();
         this.heartItemUtil = plugin.getHeartItemUtil();
+        this.battleLockKey = new NamespacedKey("battlelock", "combat_log_player_id");
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -101,12 +102,12 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        List<MetadataValue> metadata = npc.getMetadata(battleLockMetaKey);
-        if (metadata.isEmpty()) {
+        // Check if this is a BattleLock combat log NPC
+        if (!npc.getPersistentDataContainer().has(battleLockKey, PersistentDataType.STRING)) {
             return;
         }
 
-        String playerUuidString = metadata.get(0).asString();
+        String playerUuidString = npc.getPersistentDataContainer().get(battleLockKey, PersistentDataType.STRING);
         try {
             UUID combatLoggerUuid = UUID.fromString(playerUuidString);
             OfflinePlayer combatLogger = Bukkit.getOfflinePlayer(combatLoggerUuid);
@@ -157,7 +158,7 @@ public class PlayerListener implements Listener {
             }
 
         } catch (IllegalArgumentException e) {
-            plugin.getLogger().log(Level.SEVERE, "Error parsing BattleLock NPC metadata UUID from damage event: " + playerUuidString, e);
+            plugin.getLogger().log(Level.SEVERE, "Error parsing BattleLock NPC UUID from damage event: " + playerUuidString, e);
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred processing BattleLock NPC death from damage event: " + playerUuidString, e);
         }
@@ -169,12 +170,12 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        List<MetadataValue> metadata = npc.getMetadata(battleLockMetaKey);
-        if (metadata.isEmpty()) {
+        // Check if this is a BattleLock combat log NPC
+        if (!npc.getPersistentDataContainer().has(battleLockKey, PersistentDataType.STRING)) {
             return;
         }
 
-        String playerUuidString = metadata.get(0).asString();
+        String playerUuidString = npc.getPersistentDataContainer().get(battleLockKey, PersistentDataType.STRING);
         try {
             UUID combatLoggerUuid = UUID.fromString(playerUuidString);
             OfflinePlayer combatLogger = Bukkit.getOfflinePlayer(combatLoggerUuid);
@@ -203,7 +204,7 @@ public class PlayerListener implements Listener {
             }
 
         } catch (IllegalArgumentException e) {
-            plugin.getLogger().log(Level.SEVERE, "Error parsing BattleLock NPC metadata UUID from death event: " + playerUuidString, e);
+            plugin.getLogger().log(Level.SEVERE, "Error parsing BattleLock NPC UUID from death event: " + playerUuidString, e);
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred processing BattleLock NPC death from death event: " + playerUuidString, e);
         }
@@ -283,15 +284,39 @@ public class PlayerListener implements Listener {
 
     private boolean hasBlockInteraction(Material material) {
         return switch (material) {
+            // Storage blocks
             case CHEST, TRAPPED_CHEST, ENDER_CHEST, BARREL,
+                 SHULKER_BOX, WHITE_SHULKER_BOX, ORANGE_SHULKER_BOX, MAGENTA_SHULKER_BOX, LIGHT_BLUE_SHULKER_BOX, YELLOW_SHULKER_BOX, LIME_SHULKER_BOX, PINK_SHULKER_BOX, GRAY_SHULKER_BOX, LIGHT_GRAY_SHULKER_BOX, CYAN_SHULKER_BOX, PURPLE_SHULKER_BOX, BLUE_SHULKER_BOX, BROWN_SHULKER_BOX, GREEN_SHULKER_BOX, RED_SHULKER_BOX, BLACK_SHULKER_BOX,
+
+            // Copper chests
+                 COPPER_CHEST, EXPOSED_COPPER_CHEST, WEATHERED_COPPER_CHEST, OXIDIZED_COPPER_CHEST,
+                 WAXED_COPPER_CHEST, WAXED_EXPOSED_COPPER_CHEST, WAXED_WEATHERED_COPPER_CHEST, WAXED_OXIDIZED_COPPER_CHEST,
+
+            // Utility/crafting blocks
                  CRAFTING_TABLE, ENCHANTING_TABLE, ANVIL, CHIPPED_ANVIL, DAMAGED_ANVIL,
                  FURNACE, BLAST_FURNACE, SMOKER, BREWING_STAND,
+                 GRINDSTONE, LOOM, STONECUTTER, CARTOGRAPHY_TABLE, FLETCHING_TABLE, SMITHING_TABLE,
+                 CRAFTER, CHISELED_BOOKSHELF, LECTERN, COMPOSTER,
                  DISPENSER, DROPPER, HOPPER,
-                 ACACIA_DOOR, BIRCH_DOOR, DARK_OAK_DOOR, JUNGLE_DOOR, OAK_DOOR, SPRUCE_DOOR, MANGROVE_DOOR, CHERRY_DOOR, BAMBOO_DOOR, CRIMSON_DOOR, WARPED_DOOR, IRON_DOOR,
-                 ACACIA_TRAPDOOR, BIRCH_TRAPDOOR, DARK_OAK_TRAPDOOR, JUNGLE_TRAPDOOR, OAK_TRAPDOOR, SPRUCE_TRAPDOOR, MANGROVE_TRAPDOOR, CHERRY_TRAPDOOR, BAMBOO_TRAPDOOR, CRIMSON_TRAPDOOR, WARPED_TRAPDOOR, IRON_TRAPDOOR,
-                 LEVER, ACACIA_BUTTON, BIRCH_BUTTON, DARK_OAK_BUTTON, JUNGLE_BUTTON, OAK_BUTTON, SPRUCE_BUTTON, MANGROVE_BUTTON, CHERRY_BUTTON, BAMBOO_BUTTON, CRIMSON_BUTTON, WARPED_BUTTON, STONE_BUTTON, POLISHED_BLACKSTONE_BUTTON,
-                 ACACIA_FENCE_GATE, BIRCH_FENCE_GATE, DARK_OAK_FENCE_GATE, JUNGLE_FENCE_GATE, OAK_FENCE_GATE, SPRUCE_FENCE_GATE, MANGROVE_FENCE_GATE, CHERRY_FENCE_GATE, BAMBOO_FENCE_GATE, CRIMSON_FENCE_GATE, WARPED_FENCE_GATE,
-                 SHULKER_BOX, WHITE_SHULKER_BOX, ORANGE_SHULKER_BOX, MAGENTA_SHULKER_BOX, LIGHT_BLUE_SHULKER_BOX, YELLOW_SHULKER_BOX, LIME_SHULKER_BOX, PINK_SHULKER_BOX, GRAY_SHULKER_BOX, LIGHT_GRAY_SHULKER_BOX, CYAN_SHULKER_BOX, PURPLE_SHULKER_BOX, BLUE_SHULKER_BOX, BROWN_SHULKER_BOX, GREEN_SHULKER_BOX, RED_SHULKER_BOX, BLACK_SHULKER_BOX -> true;
+                 JUKEBOX, NOTE_BLOCK, DECORATED_POT,
+                 BEEHIVE, BEE_NEST, CAMPFIRE, SOUL_CAMPFIRE, BELL,
+                 RESPAWN_ANCHOR, LODESTONE,
+
+            // Doors
+                 ACACIA_DOOR, BIRCH_DOOR, DARK_OAK_DOOR, JUNGLE_DOOR, OAK_DOOR, SPRUCE_DOOR, MANGROVE_DOOR, CHERRY_DOOR, BAMBOO_DOOR, PALE_OAK_DOOR, CRIMSON_DOOR, WARPED_DOOR, IRON_DOOR,
+                 COPPER_DOOR, EXPOSED_COPPER_DOOR, WEATHERED_COPPER_DOOR, OXIDIZED_COPPER_DOOR,
+                 WAXED_COPPER_DOOR, WAXED_EXPOSED_COPPER_DOOR, WAXED_WEATHERED_COPPER_DOOR, WAXED_OXIDIZED_COPPER_DOOR,
+
+            // Trapdoors
+                 ACACIA_TRAPDOOR, BIRCH_TRAPDOOR, DARK_OAK_TRAPDOOR, JUNGLE_TRAPDOOR, OAK_TRAPDOOR, SPRUCE_TRAPDOOR, MANGROVE_TRAPDOOR, CHERRY_TRAPDOOR, BAMBOO_TRAPDOOR, PALE_OAK_TRAPDOOR, CRIMSON_TRAPDOOR, WARPED_TRAPDOOR, IRON_TRAPDOOR,
+                 COPPER_TRAPDOOR, EXPOSED_COPPER_TRAPDOOR, WEATHERED_COPPER_TRAPDOOR, OXIDIZED_COPPER_TRAPDOOR,
+                 WAXED_COPPER_TRAPDOOR, WAXED_EXPOSED_COPPER_TRAPDOOR, WAXED_WEATHERED_COPPER_TRAPDOOR, WAXED_OXIDIZED_COPPER_TRAPDOOR,
+
+            // Buttons
+                 LEVER, ACACIA_BUTTON, BIRCH_BUTTON, DARK_OAK_BUTTON, JUNGLE_BUTTON, OAK_BUTTON, SPRUCE_BUTTON, MANGROVE_BUTTON, CHERRY_BUTTON, BAMBOO_BUTTON, PALE_OAK_BUTTON, CRIMSON_BUTTON, WARPED_BUTTON, STONE_BUTTON, POLISHED_BLACKSTONE_BUTTON,
+
+            // Fence gates
+                 ACACIA_FENCE_GATE, BIRCH_FENCE_GATE, DARK_OAK_FENCE_GATE, JUNGLE_FENCE_GATE, OAK_FENCE_GATE, SPRUCE_FENCE_GATE, MANGROVE_FENCE_GATE, CHERRY_FENCE_GATE, BAMBOO_FENCE_GATE, PALE_OAK_FENCE_GATE, CRIMSON_FENCE_GATE, WARPED_FENCE_GATE -> true;
             default -> false;
         };
     }

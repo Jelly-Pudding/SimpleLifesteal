@@ -34,9 +34,9 @@ public class HeartRecipeCommand implements CommandExecutor {
                 return true;
             }
 
-            sender.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD, TextDecoration.BOLD));
+            sender.sendMessage(Component.text("    ═══════════", NamedTextColor.GOLD, TextDecoration.BOLD));
             sender.sendMessage(Component.text("     Heart Crafting Recipe", NamedTextColor.RED, TextDecoration.BOLD));
-            sender.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD, TextDecoration.BOLD));
+            sender.sendMessage(Component.text("    ═══════════", NamedTextColor.GOLD, TextDecoration.BOLD));
             sender.sendMessage(Component.empty());
 
             for (int row = 0; row < 3; row++) {
@@ -63,9 +63,7 @@ public class HeartRecipeCommand implements CommandExecutor {
             }
 
             sender.sendMessage(Component.empty());
-            sender.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD, TextDecoration.BOLD));
-            sender.sendMessage(Component.text("Place items in a crafting table", NamedTextColor.GREEN)
-                    .append(Component.text(" or check your recipe book.", NamedTextColor.AQUA)));
+            sender.sendMessage(Component.text("═══════════", NamedTextColor.GOLD, TextDecoration.BOLD));
 
         } catch (Exception e) {
             sender.sendMessage(Component.text("Failed to display heart recipe. Contact an administrator.", NamedTextColor.RED));
