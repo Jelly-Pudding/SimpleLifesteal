@@ -34,10 +34,9 @@ public class HeartRecipeCommand implements CommandExecutor {
                 return true;
             }
 
-            sender.sendMessage(Component.text("    ═══════════", NamedTextColor.GOLD, TextDecoration.BOLD));
-            sender.sendMessage(Component.text("     Heart Crafting Recipe", NamedTextColor.RED, TextDecoration.BOLD));
-            sender.sendMessage(Component.text("    ═══════════", NamedTextColor.GOLD, TextDecoration.BOLD));
-            sender.sendMessage(Component.empty());
+            sender.sendMessage(Component.text("══════════════", NamedTextColor.GOLD, TextDecoration.BOLD));
+            sender.sendMessage(Component.text(" Heart Crafting Recipe", NamedTextColor.RED, TextDecoration.BOLD));
+            sender.sendMessage(Component.text("══════════════", NamedTextColor.GOLD, TextDecoration.BOLD));
 
             for (int row = 0; row < 3; row++) {
                 List<String> rowItems = recipeConfig.get(row);
@@ -62,8 +61,7 @@ public class HeartRecipeCommand implements CommandExecutor {
                 sender.sendMessage(rowComponent);
             }
 
-            sender.sendMessage(Component.empty());
-            sender.sendMessage(Component.text("═══════════", NamedTextColor.GOLD, TextDecoration.BOLD));
+            sender.sendMessage(Component.text("══════════════", NamedTextColor.GOLD, TextDecoration.BOLD));
 
         } catch (Exception e) {
             sender.sendMessage(Component.text("Failed to display heart recipe. Contact an administrator.", NamedTextColor.RED));

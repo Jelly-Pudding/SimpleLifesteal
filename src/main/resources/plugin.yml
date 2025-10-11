@@ -5,6 +5,7 @@ api-version: '1.21'
 description: "Simple Lifesteal plugin"
 author: AlphaAlex115
 website: www.minecraftoffline.net
+softdepend: [DiscordRelay]
 
 commands:
   hearts:

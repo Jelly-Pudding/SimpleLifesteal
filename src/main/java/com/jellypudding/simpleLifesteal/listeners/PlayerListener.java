@@ -31,6 +31,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.awt.Color;
 import java.util.Date;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -336,12 +337,20 @@ public class PlayerListener implements Listener {
 
             int banCount = plugin.getDatabaseManager().getTotalHeartBans();
             Component broadcastMessage = player.displayName()
-                    .append(Component.text(" has run out of hearts and was banned! ", NamedTextColor.GRAY))
+                    .append(Component.text(" ran out of hearts and was banned! ", NamedTextColor.GRAY))
                     .append(Component.text("(", NamedTextColor.DARK_GRAY))
                     .append(Component.text("Total bans: ", NamedTextColor.GRAY))
                     .append(Component.text(banCount, NamedTextColor.RED, TextDecoration.BOLD))
                     .append(Component.text(")", NamedTextColor.DARK_GRAY));
             Bukkit.broadcast(broadcastMessage);
+
+            if (plugin.isDiscordRelayAPIReady()) {
+                com.jellypudding.discordRelay.DiscordRelayAPI.sendFormattedMessage(
+                    "Lifesteal Ban",
+                    playerName + " ran out of hearts and was banned! (Total bans: " + banCount + ")",
+                    Color.RED
+                );
+            }
         });
     }
 
@@ -360,12 +369,20 @@ public class PlayerListener implements Listener {
 
             int banCount = plugin.getDatabaseManager().getTotalHeartBans();
             Component broadcastMessage = Component.text(playerName, NamedTextColor.YELLOW)
-                    .append(Component.text(" has run out of hearts and was banned (whilst offline)! ", NamedTextColor.GRAY))
+                    .append(Component.text(" ran out of hearts and was banned (whilst offline)! ", NamedTextColor.GRAY))
                     .append(Component.text("(", NamedTextColor.DARK_GRAY))
                     .append(Component.text("Total bans: ", NamedTextColor.GRAY))
                     .append(Component.text(banCount, NamedTextColor.RED, TextDecoration.BOLD))
                     .append(Component.text(")", NamedTextColor.DARK_GRAY));
             Bukkit.broadcast(broadcastMessage);
+
+            if (plugin.isDiscordRelayAPIReady()) {
+                com.jellypudding.discordRelay.DiscordRelayAPI.sendFormattedMessage(
+                    "Lifesteal Ban",
+                    playerName + " ran out of hearts and was banned (whilst offline)! (Total bans: " + banCount + ")",
+                    Color.RED
+                );
+            }
         });
     }
 }

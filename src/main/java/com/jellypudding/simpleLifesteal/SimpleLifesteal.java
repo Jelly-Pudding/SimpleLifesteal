@@ -30,6 +30,7 @@ public final class SimpleLifesteal extends JavaPlugin {
     private CraftingManager craftingManager;
     // Map to store results of async ban checks (PlayerName -> BanCheckResult).
     private final Map<String, BanCheckResult> pendingBanResults = new ConcurrentHashMap<>();
+    private boolean discordRelayAPIReady = false;
 
     @Override
     public void onEnable() {
@@ -71,6 +72,26 @@ public final class SimpleLifesteal extends JavaPlugin {
 
         // Register Event Listeners.
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+
+        // --- Check for DiscordRelay Integration ---
+        if (getServer().getPluginManager().isPluginEnabled("DiscordRelay")) {
+            try {
+                this.discordRelayAPIReady = com.jellypudding.discordRelay.DiscordRelayAPI.isReady();
+                if (this.discordRelayAPIReady) {
+                    getLogger().info("Successfully hooked into DiscordRelay.");
+                } else {
+                    getLogger().warning("DiscordRelay is loaded, but its API reported not ready (check DiscordRelay config/status).");
+                }
+            } catch (NoClassDefFoundError e) {
+                getLogger().severe("DiscordRelay plugin found, but its API class (DiscordRelayAPI) is incompatible or missing. Cannot integrate. Update DiscordRelay?");
+                this.discordRelayAPIReady = false;
+            } catch (Exception e) {
+                getLogger().log(java.util.logging.Level.SEVERE, "An unexpected error occurred while checking DiscordRelay API.", e);
+                this.discordRelayAPIReady = false;
+            }
+        } else {
+            getLogger().info("DiscordRelay plugin not found. Discord integration disabled.");
+        }
 
         // Initialise bStats
         int pluginId = 27543;
@@ -122,6 +143,10 @@ public final class SimpleLifesteal extends JavaPlugin {
 
     public HeartItemUtil getHeartItemUtil() {
         return heartItemUtil;
+    }
+
+    public boolean isDiscordRelayAPIReady() {
+        return discordRelayAPIReady;
     }
 
     // --- Public API Methods ---
