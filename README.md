@@ -33,14 +33,30 @@ maximum-hearts: 20
 
 # Message used when banning a player for running out of hearts.
 # Supports standard Minecraft color codes using '&' (e.g. "&c&lOut of hearts!").
-ban-message: "You ran out of hearts!"
+ban-message: '&cYou ran out of hearts! Visit &bwww.minecraftoffline.net/unban/store&c to get unbanned.'
+
+# Grace Period Settings (requires OfflineStats plugin)
+grace-period:
+  # Enable grace period for new players
+  enabled: false
+  # Duration in hours (players with less playtime are protected)
+  duration-hours: 1
 
 # Heart Crafting Settings
 heart-crafting:
+  # Enable or disable heart crafting
   enabled: true
+
+  # Crafting recipe layout (3x3 grid)
+  # Use material names from https://jd.papermc.io/paper/1.21.10/org/bukkit/Material.html
+  # Use 'AIR' or leave empty for empty slots
+  # Format: [Row1, Row2, Row3] where each row has 3 items [Left, Middle, Right]
   recipe:
+    # Top row
     - ['NETHERITE_INGOT', 'NETHER_STAR', 'NETHERITE_INGOT']
+    # Middle row
     - ['DIAMOND_BLOCK', 'DIAMOND_BLOCK', 'DIAMOND_BLOCK']
+    # Bottom row
     - ['NETHERITE_INGOT', 'NETHER_STAR', 'NETHERITE_INGOT']
 ```
 

@@ -19,7 +19,7 @@ grace-period:
 heart-crafting:
   # Enable or disable heart crafting
   enabled: true
-  
+
   # Crafting recipe layout (3x3 grid)
   # Use material names from https://jd.papermc.io/paper/1.21.10/org/bukkit/Material.html
   # Use 'AIR' or leave empty for empty slots
