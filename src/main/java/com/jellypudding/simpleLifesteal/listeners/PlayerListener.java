@@ -93,7 +93,8 @@ public class PlayerListener implements Listener {
         if (victimInGracePeriod) {
             victim.sendMessage(Component.text("Grace period protected you from losing a heart!", NamedTextColor.GREEN));
             if (killer != null && !killer.equals(victim)) {
-                killer.sendMessage(Component.text(victim.displayName() + " is in their grace period. No heart stolen.", NamedTextColor.GRAY));
+                killer.sendMessage(victim.displayName()
+                    .append(Component.text(" is in their grace period. No heart stolen.", NamedTextColor.GRAY)));
             }
             return;
         }
