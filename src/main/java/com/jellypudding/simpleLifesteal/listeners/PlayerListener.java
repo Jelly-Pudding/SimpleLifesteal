@@ -3,6 +3,7 @@ package com.jellypudding.simpleLifesteal.listeners;
 import com.jellypudding.simpleLifesteal.SimpleLifesteal;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
 import com.jellypudding.simpleLifesteal.utils.HeartItemUtil;
+import com.jellypudding.simpleLifesteal.utils.PlayerNameUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -55,6 +56,10 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         UUID playerUuid = player.getUniqueId();
 
+        if (plugin.getGracePeriodManager() != null && plugin.getGracePeriodManager().handlePlayerJoin(player)) {
+            return;
+        }
+
         playerDataManager.loadPlayerData(player, loadedHearts -> {
             if (!player.isOnline()) return;
             if (loadedHearts <= 0) {
@@ -68,7 +73,13 @@ public class PlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
-        playerDataManager.savePlayerData(event.getPlayer().getUniqueId(), true);
+        UUID playerUuid = event.getPlayer().getUniqueId();
+
+        if (plugin.getGracePeriodManager() != null && plugin.getGracePeriodManager().handlePlayerQuit(playerUuid)) {
+            return;
+        }
+
+        playerDataManager.savePlayerData(playerUuid, true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -76,8 +87,18 @@ public class PlayerListener implements Listener {
         Player victim = event.getEntity();
         Player killer = victim.getKiller();
 
-        int currentHearts = playerDataManager.getPlayerHearts(victim.getUniqueId());
+        boolean victimInGracePeriod = plugin.isPlayerInGracePeriod(victim.getUniqueId());
+        boolean killerInGracePeriod = killer != null && plugin.isPlayerInGracePeriod(killer.getUniqueId());
 
+        if (victimInGracePeriod) {
+            victim.sendMessage(Component.text("Grace period protected you from losing a heart!", NamedTextColor.GREEN));
+            if (killer != null && !killer.equals(victim)) {
+                killer.sendMessage(Component.text(victim.displayName() + " is in their grace period. No heart stolen.", NamedTextColor.GRAY));
+            }
+            return;
+        }
+
+        int currentHearts = playerDataManager.getPlayerHearts(victim.getUniqueId());
         int newHearts = Math.max(0, currentHearts - 1);
         playerDataManager.removeHearts(victim.getUniqueId(), 1);
 
@@ -89,11 +110,15 @@ public class PlayerListener implements Listener {
         }
 
         if (killer != null && !killer.equals(victim)) {
-            playerDataManager.addHearts(killer.getUniqueId(), 1);
-            int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
-            killer.sendMessage(Component.text("You stole a heart! You now have ", NamedTextColor.GREEN)
-                    .append(Component.text(killerNewHearts, NamedTextColor.RED))
-                    .append(Component.text((killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN)));
+            if (killerInGracePeriod) {
+                killer.sendMessage(Component.text("You are in your grace period. No heart gained.", NamedTextColor.GRAY));
+            } else {
+                playerDataManager.addHearts(killer.getUniqueId(), 1);
+                int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
+                killer.sendMessage(Component.text("You stole a heart! You now have ", NamedTextColor.GREEN)
+                        .append(Component.text(killerNewHearts, NamedTextColor.RED))
+                        .append(Component.text((killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN)));
+            }
         }
     }
 
@@ -113,6 +138,7 @@ public class PlayerListener implements Listener {
             UUID combatLoggerUuid = UUID.fromString(playerUuidString);
             OfflinePlayer combatLogger = Bukkit.getOfflinePlayer(combatLoggerUuid);
             String loggerName = combatLogger.getName() != null ? combatLogger.getName() : combatLoggerUuid.toString();
+            Component loggerDisplayName = PlayerNameUtil.getFormattedPlayerName(plugin.getChromaTagAPI(), combatLoggerUuid, loggerName);
 
             int originalLoggerHearts = playerDataManager.getPlayerHearts(combatLoggerUuid);
             if (originalLoggerHearts == -1) {
@@ -120,7 +146,10 @@ public class PlayerListener implements Listener {
                 return; 
             }
 
-            if (originalLoggerHearts > 0) {
+            boolean loggerInGracePeriod = plugin.getGracePeriodManager() != null &&
+                plugin.getGracePeriodManager().checkGracePeriodEligibility(combatLoggerUuid);
+
+            if (originalLoggerHearts > 0 && !loggerInGracePeriod) {
                 int newLoggerHearts = Math.max(0, originalLoggerHearts - 1);
                 playerDataManager.removeHearts(combatLoggerUuid, 1);
 
@@ -130,6 +159,8 @@ public class PlayerListener implements Listener {
                         banOfflinePlayer(combatLogger);
                     }
                 }
+            } else if (loggerInGracePeriod) {
+                plugin.getLogger().info("Combat logger " + loggerName + " is in grace period. No heart lost.");
             } else {
                 // Should never happen.
                 plugin.getLogger().warning("Combat logger " + loggerName + " already had 0 or fewer hearts (" + originalLoggerHearts + "). No action taken.");
@@ -148,11 +179,22 @@ public class PlayerListener implements Listener {
 
             if (killer != null) {
                 if (!killer.getUniqueId().equals(combatLoggerUuid)) {
-                    playerDataManager.addHearts(killer.getUniqueId(), 1);
-                    int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
-                    killer.sendMessage(Component.text("You killed " + loggerName + "'s combat log NPC and stole a heart! You now have ", NamedTextColor.GREEN)
-                            .append(Component.text(killerNewHearts, NamedTextColor.RED))
-                            .append(Component.text((killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN)));
+                    boolean killerInGracePeriod = plugin.isPlayerInGracePeriod(killer.getUniqueId());
+
+                    if (loggerInGracePeriod) {
+                        killer.sendMessage(loggerDisplayName
+                            .append(Component.text(" is in their grace period. No heart stolen.", NamedTextColor.GRAY)));
+                    } else if (killerInGracePeriod) {
+                        killer.sendMessage(Component.text("You are in your grace period. No heart gained.", NamedTextColor.GRAY));
+                    } else {
+                        playerDataManager.addHearts(killer.getUniqueId(), 1);
+                        int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
+                        killer.sendMessage(Component.text("You killed ", NamedTextColor.GREEN)
+                                .append(loggerDisplayName)
+                                .append(Component.text("'s combat logged NPC and stole a heart! You now have ", NamedTextColor.GREEN))
+                                .append(Component.text(killerNewHearts, NamedTextColor.RED))
+                                .append(Component.text((killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN)));
+                    }
                 } else {
                      plugin.getLogger().warning("Killer was the same as the combat logger. No heart added.");
                 }
@@ -188,7 +230,10 @@ public class PlayerListener implements Listener {
                 return; 
             }
 
-            if (originalLoggerHearts > 0) {
+            boolean loggerInGracePeriod = plugin.getGracePeriodManager() != null &&
+                plugin.getGracePeriodManager().checkGracePeriodEligibility(combatLoggerUuid);
+
+            if (originalLoggerHearts > 0 && !loggerInGracePeriod) {
                 int newLoggerHearts = Math.max(0, originalLoggerHearts - 1);
                 playerDataManager.removeHearts(combatLoggerUuid, 1);
 
@@ -200,6 +245,8 @@ public class PlayerListener implements Listener {
                         banOfflinePlayer(combatLogger);
                     }
                 }
+            } else if (loggerInGracePeriod) {
+                plugin.getLogger().info("Combat logger " + loggerName + " is in grace period. No heart lost from environmental NPC death.");
             } else {
                 plugin.getLogger().warning("Combat logger " + loggerName + " already had 0 or fewer hearts (" + originalLoggerHearts + "). No action taken.");
             }
@@ -368,7 +415,8 @@ public class PlayerListener implements Listener {
             plugin.getLogger().info("Banned offline player " + playerName + " (" + playerUUID + ") for running out of hearts.");
 
             int banCount = plugin.getDatabaseManager().getTotalHeartBans();
-            Component broadcastMessage = Component.text(playerName, NamedTextColor.YELLOW)
+            Component playerDisplayName = PlayerNameUtil.getFormattedPlayerName(plugin.getChromaTagAPI(), playerUUID, playerName);
+            Component broadcastMessage = playerDisplayName
                     .append(Component.text(" ran out of hearts and was banned (whilst offline)! ", NamedTextColor.GRAY))
                     .append(Component.text("(", NamedTextColor.DARK_GRAY))
                     .append(Component.text("Total bans: ", NamedTextColor.GRAY))

@@ -21,6 +21,8 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
     // Dependencies for local plugins (needed for compilation/IDE)
     compileOnly(files("libs/BasicDiscordRelay-1.1.6.jar"))
+    compileOnly(files("libs/OfflineStats-1.1.jar"))
+    compileOnly(files("libs/ChromaTag-1.2.5.jar"))
 }
 
 def targetJavaVersion = 21

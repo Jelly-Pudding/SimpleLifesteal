@@ -10,8 +10,10 @@ import com.jellypudding.simpleLifesteal.database.DatabaseManager;
 import com.jellypudding.simpleLifesteal.listeners.PlayerListener;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
 import com.jellypudding.simpleLifesteal.managers.CraftingManager;
+import com.jellypudding.simpleLifesteal.managers.GracePeriodManager;
 import com.jellypudding.simpleLifesteal.utils.HeartItemUtil;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.Plugin;
 import com.jellypudding.simpleLifesteal.utils.BanCheckResult;
 
 import java.sql.SQLException;
@@ -28,9 +30,11 @@ public final class SimpleLifesteal extends JavaPlugin {
     private PlayerDataManager playerDataManager;
     private HeartItemUtil heartItemUtil;
     private CraftingManager craftingManager;
+    private GracePeriodManager gracePeriodManager;
     // Map to store results of async ban checks (PlayerName -> BanCheckResult).
     private final Map<String, BanCheckResult> pendingBanResults = new ConcurrentHashMap<>();
     private boolean discordRelayAPIReady = false;
+    private com.jellypudding.chromaTag.ChromaTag chromaTagAPI = null;
 
     @Override
     public void onEnable() {
@@ -93,6 +97,38 @@ public final class SimpleLifesteal extends JavaPlugin {
             getLogger().info("DiscordRelay plugin not found. Discord integration disabled.");
         }
 
+        // Initialise grace period manager.
+        boolean gracePeriodEnabled = getConfig().getBoolean("grace-period.enabled", false);
+        int gracePeriodHours = getConfig().getInt("grace-period.duration-hours", 1);
+
+        if (gracePeriodEnabled) {
+            Plugin offlineStatsPlugin = getServer().getPluginManager().getPlugin("OfflineStats");
+            if (offlineStatsPlugin instanceof com.jellypudding.offlineStats.OfflineStats && offlineStatsPlugin.isEnabled()) {
+                try {
+                    com.jellypudding.offlineStats.OfflineStats offlineStats = (com.jellypudding.offlineStats.OfflineStats) offlineStatsPlugin;
+                    com.jellypudding.offlineStats.api.OfflineStatsAPI offlineStatsAPI = offlineStats.getAPI();
+                    this.gracePeriodManager = new GracePeriodManager(this, offlineStatsAPI);
+                    getLogger().info("Successfully hooked into OfflineStats. Grace period enabled (" + gracePeriodHours + " hour" + (gracePeriodHours == 1 ? "" : "s") + ").");
+                } catch (Exception e) {
+                    getLogger().log(java.util.logging.Level.SEVERE, "An unexpected error occurred while checking OfflineStats API.", e);
+                    getLogger().warning("Grace period will be disabled due to OfflineStats integration failure.");
+                }
+            } else {
+                getLogger().warning("OfflineStats plugin not found. Grace period feature disabled.");
+            }
+        } else {
+            getLogger().info("Grace period feature is disabled in config.");
+        }
+
+        // Initialise ChromaTag.
+        Plugin chromaTagPlugin = getServer().getPluginManager().getPlugin("ChromaTag");
+        if (chromaTagPlugin instanceof com.jellypudding.chromaTag.ChromaTag) {
+            this.chromaTagAPI = (com.jellypudding.chromaTag.ChromaTag) chromaTagPlugin;
+            getLogger().info("Successfully hooked into ChromaTag.");
+        } else {
+            getLogger().info("ChromaTag plugin not found. Using default names.");
+        }
+
         // Initialise bStats
         int pluginId = 27543;
         new Metrics(this, pluginId);
@@ -147,6 +183,18 @@ public final class SimpleLifesteal extends JavaPlugin {
 
     public boolean isDiscordRelayAPIReady() {
         return discordRelayAPIReady;
+    }
+
+    public GracePeriodManager getGracePeriodManager() {
+        return gracePeriodManager;
+    }
+
+    public boolean isPlayerInGracePeriod(UUID playerUuid) {
+        return gracePeriodManager != null && gracePeriodManager.isPlayerInGracePeriod(playerUuid);
+    }
+
+    public com.jellypudding.chromaTag.ChromaTag getChromaTagAPI() {
+        return chromaTagAPI;
     }
 
     // --- Public API Methods ---
