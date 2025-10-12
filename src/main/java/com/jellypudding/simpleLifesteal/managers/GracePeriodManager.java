@@ -98,9 +98,18 @@ public class GracePeriodManager {
         long remainingMs = expiryTime - System.currentTimeMillis();
         int remainingMinutes = (int) (remainingMs / 60000);
 
+        String timeText;
+        if (remainingMinutes <= 0) {
+            timeText = "Lifesteal disabled for a few more moments";
+        } else if (remainingMinutes == 1) {
+            timeText = "Lifesteal disabled for 1 more minute";
+        } else {
+            timeText = "Lifesteal disabled for " + remainingMinutes + " more minutes";
+        }
+
         Title graceTitle = Title.title(
             Component.text("Grace Period Active", NamedTextColor.GREEN, TextDecoration.BOLD),
-            Component.text("Lifesteal disabled for " + remainingMinutes + " more minutes", NamedTextColor.YELLOW),
+            Component.text(timeText, NamedTextColor.YELLOW),
             Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(4), Duration.ofMillis(500))
         );
         player.showTitle(graceTitle);
