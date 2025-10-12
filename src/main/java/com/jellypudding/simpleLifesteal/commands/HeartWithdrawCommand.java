@@ -30,6 +30,11 @@ public class HeartWithdrawCommand implements CommandExecutor {
             return true;
         }
 
+        if (plugin.isPlayerInGracePeriod(player.getUniqueId())) {
+            player.sendMessage(Component.text("You cannot withdraw hearts during your grace period.", NamedTextColor.RED));
+            return true;
+        }
+
         int heartsToWithdraw = 1;
         if (args.length > 0) {
             try {

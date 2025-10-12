@@ -286,6 +286,12 @@ public class PlayerListener implements Listener {
             // Cancel the event to prevent normal item interaction
             event.setCancelled(true);
 
+            // Check if player is in grace period
+            if (plugin.isPlayerInGracePeriod(player.getUniqueId())) {
+                player.sendMessage(Component.text("You cannot consume hearts during your grace period.", NamedTextColor.RED));
+                return;
+            }
+
             // Check if player is already at max hearts
             int currentHearts = playerDataManager.getPlayerHearts(player.getUniqueId());
             int maxHearts = plugin.getPlayerMaxHearts(player.getUniqueId());
