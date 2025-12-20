@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'com.jellypudding'
-version = '1.7'
+version = '1.8'
 
 repositories {
     mavenCentral()
@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     // Dependencies for local plugins (needed for compilation/IDE)
     compileOnly(files("libs/BasicDiscordRelay-1.1.6.jar"))
     compileOnly(files("libs/OfflineStats-1.1.jar"))

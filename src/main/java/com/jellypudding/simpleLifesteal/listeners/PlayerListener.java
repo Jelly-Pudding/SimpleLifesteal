@@ -9,6 +9,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
@@ -157,7 +158,7 @@ public class PlayerListener implements Listener {
                 if (newLoggerHearts <= 0) {
                     if (combatLogger != null) {
                         plugin.getLogger().info("Combat logger " + loggerName + " reached 0 hearts. Banning...");
-                        banOfflinePlayer(combatLogger);
+                        banOfflinePlayer(combatLogger, npc.getLocation());
                     }
                 }
             } else if (loggerInGracePeriod) {
@@ -243,7 +244,7 @@ public class PlayerListener implements Listener {
                 if (newLoggerHearts <= 0) {
                     if (combatLogger != null) {
                         plugin.getLogger().info("Combat logger " + loggerName + " reached 0 hearts from environmental death. Banning...");
-                        banOfflinePlayer(combatLogger);
+                        banOfflinePlayer(combatLogger, npc.getLocation());
                     }
                 }
             } else if (loggerInGracePeriod) {
@@ -384,6 +385,9 @@ public class PlayerListener implements Listener {
         String finalBanMessage = LegacyComponentSerializer.legacySection().serialize(componentMessage);
         String banSource = plugin.getName();
 
+        Location playerLocation = player.getLocation();
+        player.getWorld().strikeLightningEffect(playerLocation);
+
         Bukkit.getScheduler().runTask(plugin, () -> {
             player.ban(finalBanMessage, (Date) null, banSource, true);
             plugin.getDatabaseManager().addPluginBan(playerUUID, finalBanMessage);
@@ -408,13 +412,17 @@ public class PlayerListener implements Listener {
         });
     }
 
-    private void banOfflinePlayer(OfflinePlayer player) {
+    private void banOfflinePlayer(OfflinePlayer player, Location lightningLocation) {
         UUID playerUUID = player.getUniqueId();
         String playerName = player.getName() != null ? player.getName() : playerUUID.toString();
         String rawBanMessage = plugin.getBanMessage();
         Component componentMessage = LegacyComponentSerializer.legacyAmpersand().deserialize(rawBanMessage);
         String finalBanMessage = LegacyComponentSerializer.legacySection().serialize(componentMessage);
         String banSource = plugin.getName();
+
+        if (lightningLocation != null) {
+            lightningLocation.getWorld().strikeLightningEffect(lightningLocation);
+        }
 
         Bukkit.getScheduler().runTask(plugin, () -> {
             player.ban(finalBanMessage, (Date) null, banSource);
