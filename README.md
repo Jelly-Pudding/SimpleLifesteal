@@ -157,6 +157,9 @@ boolean success = simpleLifesteal.setPlayerMaxHearts(playerUUID, 25);
 
 // Increase player's maximum heart limit by specified amount
 boolean success = simpleLifesteal.increasePlayerMaxHearts(playerUUID, 3);
+
+// Check if a player is currently in their grace period
+boolean inGracePeriod = simpleLifesteal.isPlayerInGracePeriod(playerUUID);
 ```
 
 ## Support Me

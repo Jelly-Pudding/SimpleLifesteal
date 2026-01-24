@@ -108,11 +108,24 @@ public class GracePeriodManager {
         }
 
         Title graceTitle = Title.title(
-            Component.text("Grace Period Active", NamedTextColor.GREEN, TextDecoration.BOLD),
+            Component.text("Grace Period", NamedTextColor.GREEN, TextDecoration.BOLD),
             Component.text(timeText, NamedTextColor.YELLOW),
             Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(4), Duration.ofMillis(500))
         );
         player.showTitle(graceTitle);
+
+        // Also send to chat
+        String chatTimeText;
+        if (remainingMinutes <= 0) {
+            chatTimeText = "in a few moments";
+        } else if (remainingMinutes == 1) {
+            chatTimeText = "in 1 minute";
+        } else {
+            chatTimeText = "in " + remainingMinutes + " minutes";
+        }
+        player.sendMessage(Component.text("You are in your grace period. Lifesteal will activate ", NamedTextColor.GREEN)
+            .append(Component.text(chatTimeText, NamedTextColor.YELLOW))
+            .append(Component.text(".", NamedTextColor.GREEN)));
     }
 
     private void startMonitoringTask() {
