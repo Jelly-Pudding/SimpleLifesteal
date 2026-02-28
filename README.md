@@ -1,28 +1,29 @@
 # SimpleLifesteal Plugin
 
-**SimpleLifesteal** is a Minecraft 1.21.11 Paper plugin that provides a simple lifesteal mechanic where players gain hearts for killing others and lose hearts upon death. When they run out of hearts, they get banned.
+**SimpleLifesteal** is a Minecraft 1.21.11 Paper plugin custom-designed for [minecraftoffline.net](https://www.minecraftoffline.net) but it can be used by other servers. It provides a lifesteal mechanic where players gain hearts by killing others and lose hearts upon death. When a player runs out of hearts they are banned, but through the **Blood Shrine** system other players can sacrifice hearts to free them.
 
 ## Features
 
-- **Simple Lifesteal**: Gain a heart for killing a player, lose a heart on death.
-- **Heart Withdrawal**: Players can withdraw their hearts as consumable apple items using `/withdrawheart`.
-- **Heart Crafting**: Players can craft hearts using expensive materials (fully configurable recipe).
-- **Configurable Limits**: Set the starting and maximum number of hearts players can have.
-- **Player Ban**: Players who lose their final heart (reach 0) are automatically banned.
-- **Unban Reset**: Players who are externally unbanned and rejoin with 0 hearts automatically have their hearts reset to the starting amount.
-- **`/hearts` Command**: Allows players to check their current heart count.
-- **SQLite Storage**: Persists player heart data using a local SQLite database.
-- **Developer API**: Provides a simple method for other plugins to grant hearts to players.
+- **Lifesteal**: Gain a heart for killing a player, lose a heart on death.
+- **Heart Withdrawal**: Withdraw hearts as consumable apple items using `/withdrawheart`.
+- **Heart Crafting**: Craft hearts using expensive materials (fully configurable recipe).
+- **Configurable Limits**: Set starting and maximum heart counts per player.
+- **Auto-ban**: Players who reach 0 hearts are automatically banned.
+- **Unban Reset**: Players externally unbanned who rejoin with 0 hearts have their hearts reset to the starting amount.
+- **Blood Shrine**: A structure that spawns randomly in the world at configurable intervals. Players standing nearby see a boss bar showing the shrine's heart cost, time remaining, and unbans left. To free a banned player, a nearby player runs `/shrine unban <name>` and sacrifices the required number of hearts from their inventory. The shrine explodes when all its unbans are used or its timer runs out or if players physically destroy all the shrine's blocks.
+- **Grace Period**: New players can be protected for a configurable playtime window (requires OfflineStats).
+- **SQLite Storage**: Persists player heart data in a local SQLite database.
+- **Developer API**: Simple methods for other plugins to grant hearts to players.
 
 ## Installation
 
 1. Download the latest release [here](https://github.com/Jelly-Pudding/simplelifesteal/releases/latest).
-2. Place the `.jar` file in your Minecraft server's `plugins` folder.
+2. Place the `.jar` file in your server's `plugins` folder.
 3. Restart your server.
 
 ## Configuration
 
-The configuration file `plugins/SimpleLifesteal/config.yml` allows you to customise the plugin:
+`plugins/SimpleLifesteal/config.yml`:
 
 ```yaml
 # Default number of hearts players start with
@@ -31,135 +32,138 @@ starting-hearts: 10
 # Maximum hearts a player can have
 maximum-hearts: 20
 
-# Message used when banning a player for running out of hearts.
-# Supports standard Minecraft color codes using '&' (e.g. "&c&lOut of hearts!").
-ban-message: '&cYou ran out of hearts! Visit &bwww.minecraftoffline.net/unban/store&c to get unbanned.'
+# Ban message shown to a player who runs out of hearts
+ban-message: '&cYou ran out of hearts! Visit &bwww.minecraftoffline.net &cand join our Discord. Maybe a friend will unban you through in-game chat...'
 
 # Grace Period Settings (requires OfflineStats plugin)
 grace-period:
-  # Enable grace period for new players
   enabled: false
-  # Duration in hours (players with less playtime are protected)
   duration-hours: 1
+
+# Blood Shrine Settings
+shrine:
+  # Enable or disable the shrine system entirely
+  enabled: true
+
+  # World in which the shrine spawns
+  world: world
+
+  # Time range (in minutes) between each shrine appearance
+  spawn-interval-min: 420
+  spawn-interval-max: 720
+
+  # Maximum distance from 0, 0 (in blocks) where the shrine can appear
+  spawn-radius: 4500
+
+  # Heart items the activating player must sacrifice per unban (random in this range each spawn)
+  hearts-cost-min: 5
+  hearts-cost-max: 100
+
+  # How many unbans a single shrine can process (random in this range each spawn)
+  unbans-min: 1
+  unbans-max: 5
+
+  # How long (in minutes) the shrine lasts before it explodes (random in this range each spawn)
+  duration-min: 20
+  duration-max: 50
+
+  # Radius (in blocks) within which players see the boss bar and hear ambient sounds
+  proximity-radius: 30
+
+  # Radius (in blocks) within which players can actually perform a shrine unban
+  use-radius: 10
 
 # Heart Crafting Settings
 heart-crafting:
-  # Enable or disable heart crafting
   enabled: true
-
-  # Crafting recipe layout (3x3 grid)
-  # Use material names from https://jd.papermc.io/paper/1.21.10/org/bukkit/Material.html
-  # Use 'AIR' or leave empty for empty slots
-  # Format: [Row1, Row2, Row3] where each row has 3 items [Left, Middle, Right]
   recipe:
-    # Top row
     - ['NETHERITE_INGOT', 'NETHER_STAR', 'NETHERITE_INGOT']
-    # Middle row
     - ['DIAMOND_BLOCK', 'DIAMOND_BLOCK', 'DIAMOND_BLOCK']
-    # Bottom row
     - ['NETHERITE_INGOT', 'NETHER_STAR', 'NETHERITE_INGOT']
 ```
 
-> **Note:** Recipe uses Material names from [Paper's Material enum](https://jd.papermc.io/paper/1.21.10/org/bukkit/Material.html).
-
-## Updating to v1.6
-
-**If you're upgrading to v1.6 from a previous version**, you need to manually add a new column to your database to support individual player heart limits.
-
-### Manual Database Update Steps:
-
-1. **Stop your server** to ensure the database isn't being used.
-
-2. **Navigate to your plugin directory:**
-   ```bash
-   cd plugins/SimpleLifesteal/
-   ```
-
-3. **Open the database with SQLite:**
-   ```bash
-   sqlite3 player_hearts.db
-   ```
-
-4. **Add the new column:**
-   ```sql
-   ALTER TABLE player_hearts ADD COLUMN max_hearts INTEGER;
-   ```
-
-5. **Verify the column was added:**
-   ```sql
-   .schema player_hearts
-   ```
-   You should see: `CREATE TABLE player_hearts (uuid TEXT PRIMARY KEY NOT NULL, current_hearts INTEGER NOT NULL, max_hearts INTEGER)`
-
-6. **Exit SQLite:**
-   ```sql
-   .quit
-   ```
+> Recipe slot names come from [Paper's Material enum](https://jd.papermc.io/paper/1.21.10/org/bukkit/Material.html).
 
 ## Commands
 
-- `/hearts`: Shows the player their current heart count.
-- `/withdrawheart [amount]`: Withdraw hearts as consumable apple items. Defaults to 1 heart if no amount specified.
-- `/heartrecipe`: Displays the heart crafting recipe in chat.
-- `/isbanned <player>`: Checks if a player is banned by SimpleLifesteal.
-- `/slunban <player>`: Removes a player ban from the SimpleLifesteal database.
-- `/checkbanresult <player>`: (Admin/RCON) Checks the result of a pending Bedrock player ban check initiated by /isbanned.
+| Command | Description |
+|---|---|
+| `/hearts` | Shows your current heart count. |
+| `/withdrawheart [amount]` | Withdraws hearts as consumable items. |
+| `/heartrecipe` | Displays the heart crafting recipe in chat. |
+| `/shrine unban <player>` | Sacrifice heart items at an active Blood Shrine to unban a player. Must be within `use-radius` of the shrine. |
+| `/shrine info` | (Admin) Shows the active shrine's location, cost, and time remaining. |
+| `/shrine spawn` | (Admin) Forces a shrine to spawn immediately. |
+| `/shrine cancel` | (Admin) Detonates the active shrine. |
+| `/isbanned <player>` | Checks if a player is banned by SimpleLifesteal. |
+| `/slunban <player>` | Removes a player's ban from the SimpleLifesteal database. |
+| `/checkbanresult <player>` | (Admin/RCON) Checks a pending Bedrock ban-check result. |
+
+> Bedrock player names must be prefixed with `.` (e.g. `/shrine unban .BedrockPlayer`).
 
 ## Permissions
 
-- `simplelifesteal.command.hearts`: Allows using the `/hearts` command (Default: `true` - everyone has access).
-- `simplelifesteal.command.withdrawheart`: Allows using the `/withdrawheart` command (Default: `true` - everyone has access).
-- `simplelifesteal.command.heartrecipe`: Allows using the `/heartrecipe` command (Default: `true` - everyone has access).
-- `simplelifesteal.command.isbanned`: Allows using the /isbanned command (Default: `op` - only OPs have access).
-- `simplelifesteal.command.slunban`: Allows using the /slunban command (Default: `op` - only OPs have access).
-- `simplelifesteal.command.checkbanresult`: Allows using the /checkbanresult command (Default: `op` - only OPs have access).
+| Permission | Default | Description |
+|---|---|---|
+| `simplelifesteal.command.hearts` | everyone | Use `/hearts`. |
+| `simplelifesteal.command.withdrawheart` | everyone | Use `/withdrawheart`. |
+| `simplelifesteal.command.heartrecipe` | everyone | Use `/heartrecipe`. |
+| `simplelifesteal.shrine.unban` | everyone | Use `/shrine unban`. |
+| `simplelifesteal.command.isbanned` | op | Use `/isbanned`. |
+| `simplelifesteal.command.slunban` | op | Use `/slunban`. |
+| `simplelifesteal.command.checkbanresult` | op | Use `/checkbanresult`. |
+| `simplelifesteal.shrine.admin` | op | Use `/shrine spawn`, `/shrine cancel`, `/shrine info`. |
 
 ## API for Developers
 
-### Setup Dependencies
-1. Download the latest `SimpleLifesteal.jar` and place it in a `libs` directory - and then add this to your `build.gradle` file:
-    ```gradle
-    dependencies {
-        compileOnly files('libs/SimpleLifesteal-1.7.0.jar')
-    }
-    ```
+### Setup
 
-2. If SimpleLifesteal is absolutely required by your plugin, then add this to your `plugin.yml` file - and this means if SimpleLifesteal is not found then your plugin will not load:
-    ```yaml
-    depend: [SimpleLifesteal]
-    ```
+Place `SimpleLifesteal.jar` in a `libs` directory and add to `build.gradle`:
 
-### Getting SimpleLifesteal Instance
-You can import SimpleLifesteal into your project through using the below code:
+```gradle
+dependencies {
+    compileOnly files('libs/SimpleLifesteal-2.0.jar')
+}
+```
+
+If SimpleLifesteal is required by your plugin, add to `plugin.yml`:
+
+```yaml
+depend: [SimpleLifesteal]
+```
+
+### Getting the Instance
+
 ```java
 import org.bukkit.Bukkit;
 import com.jellypudding.simpleLifesteal.SimpleLifesteal;
 
-Plugin simpleLifestealPlugin = Bukkit.getPluginManager().getPlugin("SimpleLifesteal");
-if (simpleLifestealPlugin instanceof SimpleLifesteal && simpleLifestealPlugin.isEnabled()) {
-    SimpleLifesteal simpleLifesteal = (SimpleLifesteal) simpleLifestealPlugin;
+Plugin pl = Bukkit.getPluginManager().getPlugin("SimpleLifesteal");
+if (pl instanceof SimpleLifesteal simpleLifesteal && pl.isEnabled()) {
+    // use simpleLifesteal
 }
 ```
 
-### Available API Methods
-```java
-// Get player's current heart count
-int currentHearts = simpleLifesteal.getPlayerHearts(playerUUID);
+### Available Methods
 
-// Add hearts to a player (returns success boolean)
+```java
+// Get a player's current heart count
+int hearts = simpleLifesteal.getPlayerHearts(playerUUID);
+
+// Add hearts to a player (returns true on success)
 boolean success = simpleLifesteal.addHearts(playerUUID, 5);
 
-// Get player's current maximum heart limit
-int maxHearts = simpleLifesteal.getPlayerMaxHearts(playerUUID);
+// Get a player's current maximum heart limit
+int max = simpleLifesteal.getPlayerMaxHearts(playerUUID);
 
-// Set player's maximum heart limit (allows exceeding global maximum)
+// Set a player's maximum heart limit (can exceed the global maximum)
 boolean success = simpleLifesteal.setPlayerMaxHearts(playerUUID, 25);
 
-// Increase player's maximum heart limit by specified amount
+// Increase a player's maximum heart limit
 boolean success = simpleLifesteal.increasePlayerMaxHearts(playerUUID, 3);
 
 // Check if a player is currently in their grace period
-boolean inGracePeriod = simpleLifesteal.isPlayerInGracePeriod(playerUUID);
+boolean inGrace = simpleLifesteal.isPlayerInGracePeriod(playerUUID);
 ```
 
 ## Support Me

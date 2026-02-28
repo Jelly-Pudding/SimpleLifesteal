@@ -6,11 +6,14 @@ import com.jellypudding.simpleLifesteal.commands.SlUnbanCommand;
 import com.jellypudding.simpleLifesteal.commands.CheckBanResultCommand;
 import com.jellypudding.simpleLifesteal.commands.HeartWithdrawCommand;
 import com.jellypudding.simpleLifesteal.commands.HeartRecipeCommand;
+import com.jellypudding.simpleLifesteal.commands.ShrineCommand;
 import com.jellypudding.simpleLifesteal.database.DatabaseManager;
 import com.jellypudding.simpleLifesteal.listeners.PlayerListener;
+import com.jellypudding.simpleLifesteal.listeners.ShrineListener;
 import com.jellypudding.simpleLifesteal.managers.PlayerDataManager;
 import com.jellypudding.simpleLifesteal.managers.CraftingManager;
 import com.jellypudding.simpleLifesteal.managers.GracePeriodManager;
+import com.jellypudding.simpleLifesteal.shrine.ShrineManager;
 import com.jellypudding.simpleLifesteal.utils.HeartItemUtil;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.Plugin;
@@ -31,6 +34,8 @@ public final class SimpleLifesteal extends JavaPlugin {
     private HeartItemUtil heartItemUtil;
     private CraftingManager craftingManager;
     private GracePeriodManager gracePeriodManager;
+    private ShrineManager shrineManager;
+    private ShrineListener shrineListener;
     // Map to store results of async ban checks (PlayerName -> BanCheckResult).
     private final Map<String, BanCheckResult> pendingBanResults = new ConcurrentHashMap<>();
     private boolean discordRelayAPIReady = false;
@@ -74,8 +79,20 @@ public final class SimpleLifesteal extends JavaPlugin {
         getCommand("slunban").setExecutor(new SlUnbanCommand(this));
         getCommand("checkbanresult").setExecutor(new CheckBanResultCommand(this));
 
+        if (getConfig().getBoolean("shrine.enabled", true)) {
+            shrineManager = new ShrineManager(this);
+            shrineListener = new ShrineListener(this, shrineManager);
+            ShrineCommand shrineCmd = new ShrineCommand(this, shrineManager);
+            getCommand("shrine").setExecutor(shrineCmd);
+            getCommand("shrine").setTabCompleter(shrineCmd);
+            shrineManager.scheduleNextSpawn();
+        }
+
         // Register Event Listeners.
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+        if (shrineListener != null) {
+            getServer().getPluginManager().registerEvents(shrineListener, this);
+        }
 
         // --- Check for DiscordRelay Integration ---
         if (getServer().getPluginManager().isPluginEnabled("DiscordRelay")) {
@@ -138,6 +155,14 @@ public final class SimpleLifesteal extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (shrineListener != null) {
+            shrineListener.shutdown();
+        }
+
+        if (shrineManager != null) {
+            shrineManager.shutdown();
+        }
+
         if (playerDataManager != null) {
             playerDataManager.saveAllPlayerData();
         }
@@ -195,6 +220,10 @@ public final class SimpleLifesteal extends JavaPlugin {
 
     public com.jellypudding.chromaTag.ChromaTag getChromaTagAPI() {
         return chromaTagAPI;
+    }
+
+    public ShrineManager getShrineManager() {
+        return shrineManager;
     }
 
     // --- Public API Methods ---

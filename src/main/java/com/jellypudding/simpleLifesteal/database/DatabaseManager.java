@@ -87,6 +87,21 @@ public class DatabaseManager {
             plugin.getLogger().log(Level.SEVERE, "Could not initialise plugin_bans table!", e);
             throw e;
         }
+
+        String shrineUnbanSql = "CREATE TABLE IF NOT EXISTS shrine_unbans (" +
+                                " id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                                " unbanned_uuid TEXT NOT NULL," +
+                                " unbanned_name TEXT," +
+                                " performer_uuid TEXT NOT NULL," +
+                                " performer_name TEXT," +
+                                " timestamp INTEGER NOT NULL" +
+                                ");";
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(shrineUnbanSql);
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Could not initialise shrine_unbans table!", e);
+            throw e;
+        }
     }
 
     public void closeConnection() {
@@ -246,6 +261,28 @@ public class DatabaseManager {
             }
         }
         return false;
+    }
+
+    public void recordShrineUnban(UUID unbannedUuid, String unbannedName,
+                                  UUID performerUuid, String performerName) {
+        String sql = "INSERT INTO shrine_unbans " +
+                     "(unbanned_uuid, unbanned_name, performer_uuid, performer_name, timestamp) " +
+                     "VALUES (?, ?, ?, ?, ?)";
+        synchronized (connectionLock) {
+            try {
+                Connection conn = getConnection();
+                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setString(1, unbannedUuid.toString());
+                    pstmt.setString(2, unbannedName);
+                    pstmt.setString(3, performerUuid.toString());
+                    pstmt.setString(4, performerName);
+                    pstmt.setLong(5, System.currentTimeMillis());
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not record shrine unban for UUID: " + unbannedUuid, e);
+            }
+        }
     }
 
     public int getTotalHeartBans() {
