@@ -7,7 +7,9 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CraftingManager {
 
@@ -48,21 +50,25 @@ public class CraftingManager {
             ItemStack heartItem = heartItemUtil.createHeartItem(1);
             ShapedRecipe recipe = new ShapedRecipe(recipeKey, heartItem);
 
-            recipe.shape("ABC", "DEF", "GHI");
-            String[] positions = {"A", "B", "C", "D", "E", "F", "G", "H", "I"};
-            int posIndex = 0;
-            for (List<String> row : recipeConfig) {
-                for (String materialName : row) {
-                    String position = positions[posIndex];
+            StringBuilder[] shapeRows = {new StringBuilder(), new StringBuilder(), new StringBuilder()};
+            Map<Character, Material> ingredientMap = new HashMap<>();
+            char letter = 'A';
+            for (int row = 0; row < recipeConfig.size(); row++) {
+                for (String materialName : recipeConfig.get(row)) {
                     Material material = parseMaterial(materialName);
-                    
                     if (material != null && material != Material.AIR) {
-                        recipe.setIngredient(position.charAt(0), material);
+                        shapeRows[row].append(letter);
+                        ingredientMap.put(letter, material);
                     } else {
-                        recipe.setIngredient(position.charAt(0), Material.AIR);
+                        shapeRows[row].append(' ');
                     }
-                    posIndex++;
+                    letter++;
                 }
+            }
+
+            recipe.shape(shapeRows[0].toString(), shapeRows[1].toString(), shapeRows[2].toString());
+            for (Map.Entry<Character, Material> entry : ingredientMap.entrySet()) {
+                recipe.setIngredient(entry.getKey(), entry.getValue());
             }
 
             plugin.getServer().addRecipe(recipe);
@@ -93,4 +99,3 @@ public class CraftingManager {
         }
     }
 }
-

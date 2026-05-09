@@ -1,6 +1,6 @@
 # SimpleLifesteal Plugin
 
-**SimpleLifesteal** is a Minecraft 1.21.11 Paper plugin custom-designed for [minecraftoffline.net](https://www.minecraftoffline.net) but it can be used by other servers. It provides a lifesteal mechanic where players gain hearts by killing others and lose hearts upon death. When a player runs out of hearts they are banned, but through the **Blood Shrine** system other players can sacrifice hearts to free them.
+**SimpleLifesteal** is a Minecraft 26.1.2 Paper plugin custom-designed for [minecraftoffline.net](https://www.minecraftoffline.net) but it can be used by other servers. It provides a lifesteal mechanic where players gain hearts by killing others and lose hearts upon death. When a player runs out of hearts they are banned, but through the **Blood Shrine** system other players can sacrifice hearts to free them.
 
 ## Features
 

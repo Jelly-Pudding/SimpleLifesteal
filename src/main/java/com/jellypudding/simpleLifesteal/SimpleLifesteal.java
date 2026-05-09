@@ -226,10 +226,10 @@ public final class SimpleLifesteal extends JavaPlugin {
         return shrineManager;
     }
 
-    // --- Public API Methods ---
+    // API Methods are below
 
     /**
-     * Public API method to give a player hearts.
+     * API method to give a player hearts.
      * Handles clamping hearts between min (0) and max configured hearts.
      * Saves the data to the database.
      *
@@ -246,7 +246,7 @@ public final class SimpleLifesteal extends JavaPlugin {
     }
 
     /**
-     * Public API method to get a player's current heart count.
+     * API method to get a player's current heart count.
      *
      * @param playerUuid The UUID of the player.
      * @return The player's current heart count, or starting hearts if player not found.
@@ -260,7 +260,7 @@ public final class SimpleLifesteal extends JavaPlugin {
     }
 
     /**
-     * Public API method to get a player's maximum heart limit.
+     * API method to get a player's maximum heart limit.
      * Returns the individual player's limit if set, otherwise the global maximum.
      *
      * @param playerUuid The UUID of the player.
@@ -275,7 +275,7 @@ public final class SimpleLifesteal extends JavaPlugin {
     }
 
     /**
-     * Public API method to set a player's maximum heart limit.
+     * API method to set a player's maximum heart limit.
      * This allows the player to exceed the global maximum-hearts configuration.
      *
      * @param playerUuid The UUID of the player.
@@ -295,7 +295,7 @@ public final class SimpleLifesteal extends JavaPlugin {
     }
 
     /**
-     * Public API method to increase a player's maximum heart limit.
+     * API method to increase a player's maximum heart limit.
      * This allows the player to exceed the global maximum-hearts configuration.
      *
      * @param playerUuid The UUID of the player.

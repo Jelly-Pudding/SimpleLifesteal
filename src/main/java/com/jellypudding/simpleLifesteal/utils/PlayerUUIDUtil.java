@@ -23,7 +23,7 @@ public class PlayerUUIDUtil {
             .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(5))
             .build();
-    private static final Pattern uuidPattern = Pattern.compile("\"id\"\s*:\s*\"([0-9a-fA-F-]+)\"");
+    private static final Pattern uuidPattern = Pattern.compile("\"id\"\\s*:\\s*\"([0-9a-fA-F-]+)\"");
 
     public static void fetchBedrockUUIDAsync(SimpleLifesteal plugin, String playerName, Consumer<UUID> callback) {
         if (playerName == null || callback == null || plugin == null) {

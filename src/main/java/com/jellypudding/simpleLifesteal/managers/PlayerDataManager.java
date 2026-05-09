@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -82,14 +83,8 @@ public class PlayerDataManager {
 
     public void saveAllPlayerData() {
         plugin.getLogger().info("Saving all player heart data synchronously...");
-        for (UUID uuid : heartCache.keySet()) {
-            if (heartCache.containsKey(uuid)) {
-                 int hearts = heartCache.get(uuid);
-                 databaseManager.setPlayerHearts(uuid, hearts);
-             } else {
-                 // Should never happen.
-                 plugin.getLogger().warning("Attempted to save data for UUID " + uuid + " which was not in cache during shutdown.");
-             }
+        for (Map.Entry<UUID, Integer> entry : heartCache.entrySet()) {
+            databaseManager.setPlayerHearts(entry.getKey(), entry.getValue());
         }
         plugin.getLogger().info("Finished saving player heart data synchronously.");
     }
