@@ -35,6 +35,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.awt.Color;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -115,11 +116,20 @@ public class PlayerListener implements Listener {
             if (killerInGracePeriod) {
                 killer.sendMessage(Component.text("You are in your grace period. No heart gained.", NamedTextColor.GRAY));
             } else {
-                playerDataManager.addHearts(killer.getUniqueId(), 1);
-                int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
-                killer.sendMessage(Component.text("You stole a heart! You now have ", NamedTextColor.GREEN)
-                        .append(Component.text(killerNewHearts, NamedTextColor.RED))
-                        .append(Component.text((killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN)));
+                int killerCurrentHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
+                int killerMaxHearts = plugin.getPlayerMaxHearts(killer.getUniqueId());
+
+                if (killerCurrentHearts >= killerMaxHearts) {
+                    boolean dropped = giveOrDropHeartItem(killer);
+                    killer.sendMessage(Component.text("You stole a heart, but your hearts are full! A heart item was "
+                            + (dropped ? "dropped at your feet" : "added to your inventory") + ".", NamedTextColor.GREEN));
+                } else {
+                    playerDataManager.addHearts(killer.getUniqueId(), 1);
+                    int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
+                    killer.sendMessage(Component.text("You stole a heart! You now have ", NamedTextColor.GREEN)
+                            .append(Component.text(killerNewHearts, NamedTextColor.RED))
+                            .append(Component.text((killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN)));
+                }
             }
         }
     }
@@ -189,13 +199,24 @@ public class PlayerListener implements Listener {
                     } else if (killerInGracePeriod) {
                         killer.sendMessage(Component.text("You are in your grace period. No heart gained.", NamedTextColor.GRAY));
                     } else {
-                        playerDataManager.addHearts(killer.getUniqueId(), 1);
-                        int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
-                        killer.sendMessage(Component.text("You killed ", NamedTextColor.GREEN)
-                                .append(loggerDisplayName)
-                                .append(Component.text("'s combat logged NPC and stole a heart! You now have ", NamedTextColor.GREEN))
-                                .append(Component.text(killerNewHearts, NamedTextColor.RED))
-                                .append(Component.text((killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN)));
+                        int killerCurrentHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
+                        int killerMaxHearts = plugin.getPlayerMaxHearts(killer.getUniqueId());
+
+                        if (killerCurrentHearts >= killerMaxHearts) {
+                            boolean dropped = giveOrDropHeartItem(killer);
+                            killer.sendMessage(Component.text("You killed ", NamedTextColor.GREEN)
+                                    .append(loggerDisplayName)
+                                    .append(Component.text("'s combat logged NPC, but your hearts are full! A heart item was "
+                                            + (dropped ? "dropped at your feet" : "added to your inventory") + ".", NamedTextColor.GREEN)));
+                        } else {
+                            playerDataManager.addHearts(killer.getUniqueId(), 1);
+                            int killerNewHearts = playerDataManager.getPlayerHearts(killer.getUniqueId());
+                            killer.sendMessage(Component.text("You killed ", NamedTextColor.GREEN)
+                                    .append(loggerDisplayName)
+                                    .append(Component.text("'s combat logged NPC and stole a heart! You now have ", NamedTextColor.GREEN))
+                                    .append(Component.text(killerNewHearts, NamedTextColor.RED))
+                                    .append(Component.text((killerNewHearts == 1 ? " heart." : " hearts."), NamedTextColor.GREEN)));
+                        }
                     }
                 } else {
                      plugin.getLogger().warning("Killer was the same as the combat logger. No heart added.");
@@ -375,6 +396,16 @@ public class PlayerListener implements Listener {
                  ACACIA_FENCE_GATE, BIRCH_FENCE_GATE, DARK_OAK_FENCE_GATE, JUNGLE_FENCE_GATE, OAK_FENCE_GATE, SPRUCE_FENCE_GATE, MANGROVE_FENCE_GATE, CHERRY_FENCE_GATE, BAMBOO_FENCE_GATE, PALE_OAK_FENCE_GATE, CRIMSON_FENCE_GATE, WARPED_FENCE_GATE -> true;
             default -> false;
         };
+    }
+
+    private boolean giveOrDropHeartItem(Player player) {
+        ItemStack heartItem = heartItemUtil.createHeartItem(1);
+        HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(heartItem);
+        if (!leftover.isEmpty()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), leftover.values().iterator().next());
+            return true;
+        }
+        return false;
     }
 
     private void banPlayer(Player player) {
